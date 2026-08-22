@@ -10,6 +10,9 @@ Routes define the external contract of the application and should be separate fr
 | File | What it does |
 |------|--------------|
 | auth.routes.ts | Exposes the public authentication endpoints for register, login, refresh, logout, and me |
+| admin.routes.ts | Protects admin overview endpoints behind `requireAuth` and `requireRole(['ADMIN'])` |
+| patient.routes.ts | Protects patient appointment endpoints behind `requireAuth` and `requireRole(['PATIENT'])` |
+| doctor.routes.ts | Protects doctor profile and appointment endpoints behind `requireAuth` and `requireRole(['DOCTOR'])` |
 
 ## How it connects to the rest of the system
 The route files are mounted by the Express app bootstrap, and each route forwards requests to the corresponding controller and service logic. This creates a clean flow from HTTP request to domain action and response.
