@@ -1,0 +1,15 @@
+{
+  "name": "medibook",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "test": "cd backend && npm test"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
