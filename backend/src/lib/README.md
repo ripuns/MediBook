@@ -10,6 +10,7 @@ Libraries are cross-cutting concerns with broad reuse across the backend. Keepin
 | File | What it does |
 |------|--------------|
 | prisma.ts | Exposes the single Prisma client instance used throughout the backend |
+| jwt.ts | Signs and verifies access/refresh JWTs for authentication and session renewal |
 
 ## How it connects to the rest of the system
-The Prisma singleton is imported by services, controllers, and background jobs whenever they need typed database access. This keeps all data operations behind a single shared client, which makes startup, testing, and connection management consistent across the app.
+The Prisma singleton and JWT helpers are imported by services, controllers, and middleware whenever they need database access or authentication tokens. This keeps data access and auth flows consistent, testable, and decoupled from route logic.

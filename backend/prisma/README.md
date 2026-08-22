@@ -10,7 +10,8 @@ Keeping the database contract isolated from the rest of the backend enforces a c
 | File | What it does |
 |------|--------------|
 | schema.prisma | Defines the PostgreSQL schema, enums, and Prisma models used across the platform |
+| seed.ts | Creates default admin, doctor, and patient records for local development and testing |
 | migrations/ | Stores generated migration files created when Prisma evolves the database schema |
 
 ## How it connects to the rest of the system
-The backend application uses Prisma client access from the application source tree to read and write users, appointments, notifications, and OAuth tokens. The schema here is the single source of truth for the data contract that services, controllers, jobs, and background workers all depend on.
+The backend application uses Prisma client access from the application source tree to read and write users, appointments, notifications, and OAuth tokens. The schema and seed data here define the initial data contract and development baseline that services, controllers, jobs, and tests rely on.
