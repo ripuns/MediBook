@@ -11,6 +11,7 @@ Business logic is the most reusable and testable part of the backend. Keeping it
 |------|--------------|
 | auth.service.ts | Handles registration, login, refresh token rotation, logout, and authenticated user lookup |
 | booking.service.ts | Generates available doctor slots from working hours, filters out held or confirmed times, and manages hold/confirm/cancel flows with transaction-safe double-booking protection |
+| leave.service.ts | Creates, lists, and cancels doctor leave dates while preventing duplicate leave entries and enforcing doctor ownership |
 
 ## How it connects to the rest of the system
 Controllers call into the service layer to perform secure auth actions and slot availability checks, while the service layer reads from Prisma and JWT utilities. This keeps HTTP handlers thin and keeps business rules centralised.
