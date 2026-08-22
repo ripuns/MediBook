@@ -1,3 +1,5 @@
+import { Prisma, PrismaClient } from '@prisma/client';
+
 export type SlotConflict = {
   slotStart: string | Date;
   status: 'CONFIRMED' | 'HELD';
@@ -89,6 +91,137 @@ export function generateSlots({
   }
 
   return slots;
+}
+
+export async function holdSlot({
+  prisma,
+  doctorId,
+  patientId,
+  slotStart,
+  slotEnd,
+}: {
+  prisma: PrismaClient;
+  doctorId: string;
+  patientId: string;
+  slotStart: Date | string;
+  slotEnd: Date | string;
+}) {
+  const start = new Date(slotStart);
+  const end = new Date(slotEnd);
+
+  // We do the conflict check and insert inside a single transaction so two near-simultaneous
+  // requests cannot both pass the same availability check before either one writes.
+  return prisma.$transaction(async (tx) => {
+    const conflict = await tx.appointment.findFirst({
+      where: {
+        doctorId,
+        slotStart: start,
+        OR: [
+          { status: 'CONFIRMED' },
+          {
+            status: 'HELD',
+            holdExpiresAt: { gt: new Date() },
+          },
+        ],
+      },
+    });
+
+    if (conflict) {
+      const error = new Error('SLOT_TAKEN') as Error & { statusCode?: number };
+      error.statusCode = 409;
+      throw error;
+    }
+
+    return tx.appointment.create({
+      data: {
+        patientId,
+        doctorId,
+        slotStart: start,
+        slotEnd: end,
+        status: 'HELD',
+        holdExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      },
+    });
+  });
+}
+
+export async function confirmSlot({
+  prisma,
+  appointmentId,
+  patientId,
+  symptoms,
+  preVisitSummary,
+}: {
+  prisma: PrismaClient;
+  appointmentId: string;
+  patientId: string;
+  symptoms?: string | null;
+  preVisitSummary?: Prisma.InputJsonValue;
+}) {
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+  });
+
+  if (!appointment) {
+    const error = new Error('Appointment not found.') as Error & { statusCode?: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (appointment.patientId !== patientId) {
+    const error = new Error('This appointment does not belong to the current patient.') as Error & { statusCode?: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // We clear the temporary hold once the patient confirms so the slot becomes a formal booking
+  // instead of a five-minute reservation that can still be treated as pending.
+  const nextPreVisitSummary =
+    preVisitSummary !== undefined ? preVisitSummary : appointment.preVisitSummary ?? Prisma.JsonNull;
+
+  return prisma.appointment.update({
+    where: { id: appointmentId },
+    data: {
+      status: 'CONFIRMED',
+      symptoms: symptoms ?? appointment.symptoms,
+      preVisitSummary: nextPreVisitSummary,
+      holdExpiresAt: null,
+    },
+  });
+}
+
+export async function cancelSlot({
+  prisma,
+  appointmentId,
+  patientId,
+}: {
+  prisma: PrismaClient;
+  appointmentId: string;
+  patientId?: string;
+}) {
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+  });
+
+  if (!appointment) {
+    const error = new Error('Appointment not found.') as Error & { statusCode?: number };
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (patientId && appointment.patientId !== patientId) {
+    const error = new Error('This appointment does not belong to the current user.') as Error & { statusCode?: number };
+    error.statusCode = 403;
+    throw error;
+  }
+
+  return prisma.appointment.update({
+    where: { id: appointmentId },
+    data: {
+      status: 'CANCELLED',
+      holdExpiresAt: null,
+    },
+  });
 }
 
 function timeToMinutes(value: string): number {
