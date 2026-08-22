@@ -3,6 +3,7 @@ import cors from 'cors';
 
 import adminRoutes from './routes/admin.routes';
 import authRoutes from './routes/auth.routes';
+import bookingRoutes from './routes/booking.routes';
 import doctorRoutes from './routes/doctor.routes';
 import patientRoutes from './routes/patient.routes';
 import { errorHandler } from './middleware/errorHandler';
@@ -24,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/patient', patientRoutes);
 app.use('/api/doctor', doctorRoutes);
+app.use('/api/booking', bookingRoutes);
 
 // Route-level errors are normalised here so all controllers can throw domain errors
 // without custom response formatting in each route handler.
