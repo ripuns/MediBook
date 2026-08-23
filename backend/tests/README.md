@@ -10,6 +10,7 @@ Tests define expected behavior independently from production code. Keeping them 
 | File | What it does |
 |------|--------------|
 | auth.test.ts | Covers the authentication flows for registration, login, refresh, logout, and protected-user access |
+| booking.test.ts | Covers slot generation, hold/confirm flows, expired-hold handling, and duplicate-slot protection |
 
 ## How it connects to the rest of the system
-The tests exercise the Express app and the auth endpoints directly using Supertest. They confirm that the controller, service, Prisma, and JWT layers behave correctly as a single system.
+The tests exercise the Express app and the booking/auth endpoints directly using Supertest. They confirm that the controller, service, Prisma, and JWT layers behave correctly as a single system.
