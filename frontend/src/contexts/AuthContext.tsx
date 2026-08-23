@@ -60,9 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }>= ({ children 
     try {
       const resp = await api.post('/auth/login', { email, password });
       const data = resp.data?.data;
-      if (data?.accessToken) {
-        localStorage.setItem('accessToken', data.accessToken);
-        if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      if (data?.tokens?.accessToken) {
+        localStorage.setItem('accessToken', data.tokens.accessToken);
+        if (data.tokens.refreshToken) localStorage.setItem('refreshToken', data.tokens.refreshToken);
       }
       // load user
       const me = await api.get('/auth/me');
@@ -92,9 +92,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }>= ({ children 
     try {
       const resp = await api.post('/auth/register', payload);
       const data = resp.data?.data;
-      if (data?.accessToken) {
-        localStorage.setItem('accessToken', data.accessToken);
-        if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      if (data?.tokens?.accessToken) {
+        localStorage.setItem('accessToken', data.tokens?.accessToken);
+        if (data.tokens.refreshToken) localStorage.setItem('refreshToken', data.tokens.refreshToken);
       }
       const me = await api.get('/auth/me');
       setUser(me.data?.data ?? null);

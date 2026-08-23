@@ -69,9 +69,9 @@ export default function RegisterPage() {
             onChange={(e) => setRole(e.target.value)}
             className="mt-1 block w-full border rounded px-3 py-2"
           >
-            <option value="patient">Patient</option>
-            <option value="doctor">Doctor</option>
-            <option value="admin">Admin</option>
+            <option value="PATIENT">Patient</option>
+            <option value="DOCTOR">Doctor</option>
+            <option value="ADMIN">Admin</option>
           </select>
         </div>
         {error && <div className="text-sm text-red-600">{error}</div>}
