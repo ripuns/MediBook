@@ -1,19 +1,58 @@
+"use client";
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 
-const stats = [
-  { label: 'Total Patients', value: '1,248', detail: '+12% this month' },
-  { label: 'Active Doctors', value: '34', detail: '3 onboarding' },
-  { label: 'Appointments', value: '482', detail: '92 confirmed' },
-  { label: 'Revenue', value: '$24.8k', detail: '+8.4%' },
-];
+type Overview = {
+  userCount: number;
+  doctorCount: number;
+  patientCount: number;
+  appointmentCount: number;
+  pendingHoldCount: number;
+};
 
-const recentActions = [
-  'Dr. Maya Patel updated clinic availability.',
-  '12 appointment reminders sent this morning.',
-  '2 new doctor profiles pending approval.',
-];
+const defaultOverview: Overview = {
+  userCount: 0,
+  doctorCount: 0,
+  patientCount: 0,
+  appointmentCount: 0,
+  pendingHoldCount: 0,
+};
 
 export default function AdminDashboardPage() {
+  const [overview, setOverview] = useState<Overview>(defaultOverview);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const response = await api.get('/admin/overview');
+        setOverview(response.data?.data ?? defaultOverview);
+      } catch (error) {
+        console.warn('Failed to load admin overview', error);
+        setOverview(defaultOverview);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
+
+  const stats = [
+    { label: 'Total Patients', value: loading ? '…' : String(overview.patientCount), detail: 'Registered patient accounts' },
+    { label: 'Active Doctors', value: loading ? '…' : String(overview.doctorCount), detail: 'Linked clinician profiles' },
+    { label: 'Appointments', value: loading ? '…' : String(overview.appointmentCount), detail: 'All booking records' },
+    { label: 'Pending Holds', value: loading ? '…' : String(overview.pendingHoldCount), detail: 'Temporary reservations' },
+  ];
+
+  const recentActions = [
+    'Monitor expired holds and booking spikes from the live counters.',
+    'Review doctor profiles and leave patterns before clinic hours.',
+    'Use the doctor list to keep profiles and specialisations current.',
+  ];
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -35,21 +74,21 @@ export default function AdminDashboardPage() {
 
           <div className="space-y-4">
             <div>
-              <div className="mb-2 text-sm text-gray-600">Bookings filled</div>
+              <div className="mb-2 text-sm text-gray-600">User base</div>
               <div className="h-2 w-full rounded bg-gray-200">
                 <div className="h-2 w-[72%] rounded bg-blue-600" />
               </div>
             </div>
 
             <div>
-              <div className="mb-2 text-sm text-gray-600">No-show rate</div>
+              <div className="mb-2 text-sm text-gray-600">Live holds</div>
               <div className="h-2 w-full rounded bg-gray-200">
                 <div className="h-2 w-[14%] rounded bg-amber-500" />
               </div>
             </div>
 
             <div>
-              <div className="mb-2 text-sm text-gray-600">Follow-ups sent</div>
+              <div className="mb-2 text-sm text-gray-600">Appointments processed</div>
               <div className="h-2 w-full rounded bg-gray-200">
                 <div className="h-2 w-[86%] rounded bg-emerald-500" />
               </div>
