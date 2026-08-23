@@ -1,10 +1,9 @@
-import nodemailer from 'nodemailer';
-
 import { Prisma, type NotificationLog } from '@prisma/client';
 
 import { prisma } from '../lib/prisma';
+import { sendEmail } from './email.service';
 
-export const MAX_NOTIFICATION_ATTEMPTS = 5;
+export const MAX_NOTIFICATION_ATTEMPTS = 3;
 
 export type NotificationPayload = Record<string, unknown> & {
   to?: string;
@@ -25,24 +24,11 @@ async function sendEmailNotification(payload: NotificationPayload) {
   const subject = typeof payload.subject === 'string' && payload.subject.trim().length > 0 ? payload.subject : 'MediBook notification';
   const text = typeof payload.text === 'string' && payload.text.trim().length > 0 ? payload.text : 'You have a new notification from MediBook.';
 
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    throw new Error('EMAIL_NOT_CONFIGURED');
-  }
-
   if (!to) {
     throw new Error('EMAIL_RECIPIENT_MISSING');
   }
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
-    },
-  });
-
-  await transporter.sendMail({
-    from: process.env.GMAIL_USER,
+  await sendEmail({
     to,
     subject,
     text,
