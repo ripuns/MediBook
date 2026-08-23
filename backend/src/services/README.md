@@ -1,20 +1,43 @@
 # Services
 
 ## Purpose
-This folder contains the core backend business logic for MediBook. It is where domain operations such as authentication, booking, and notifications are implemented independently from HTTP route code.
+This folder contains the backend's core business logic for MediBook. It keeps domain rules, database operations, and external integration logic separate from HTTP controllers and routing code.
 
-## Why a separate folder?
-Business logic is the most reusable and testable part of the backend. Keeping it in services creates a clean separation between controller concerns (requests/responses) and domain behavior (rules, validation, and data mutations).
+## Why this folder exists
+Business logic is the most reusable and testable part of the application. Keeping service code in one layer creates a clean separation between:
+- controllers: request validation, parsing, response shaping
+- services: business rules, Prisma access, transaction handling
+- jobs: scheduled background tasks that invoke service logic
+- routes: API surface exposure
 
-## Files in this folder
+## Current service modules
 | File | What it does |
 |------|--------------|
-| auth.service.ts | Handles registration, login, refresh token rotation, logout, and authenticated user lookup |
-| booking.service.ts | Generates available doctor slots from working hours, filters out held or confirmed times, and manages hold/confirm/cancel flows with transaction-safe double-booking protection |
-| leave.service.ts | Creates, lists, and cancels doctor leave dates while preventing duplicate leave entries and enforcing doctor ownership |
-| llm.service.ts | Runs pre-visit and post-visit AI summaries via OpenAI and falls back to safe JSON objects whenever the model is unavailable |
-| email.service.ts | Sends transactional emails through Gmail SMTP and centralises the SMTP transport and email payload formatting |
-| notification.service.ts | Queues email and system notifications, delegates actual delivery to the email service, and records delivery state in the database |
+| admin.service.ts | Admin-specific operations such as managing users, doctor records, and system-level administrative queries |
+| auth.service.ts | Handles registration, login, token refresh, logout, and authenticated user lookups |
+| booking.service.ts | Generates available slots, filters blackout periods, manages hold/confirm/cancel transitions, and protects against double booking |
+| doctor.service.ts | Doctor-facing logic for profile access, appointment queries, and doctor-specific domain operations |
+| leave.service.ts | Creates, lists, and cancels leave periods while preventing duplicate or conflicting leave entries |
+| patient.service.ts | Patient-specific appointment and profile operations, including booking history and patient access checks |
+| llm.service.ts | Calls OpenAI for pre-visit/post-visit summarisation and returns safe fallback payloads when the API key is missing or the model fails |
+| email.service.ts | Provides SMTP-based transactional email sending and centralises email payload formatting |
+| notification.service.ts | Queues notifications, tracks status and attempts, and delegates final delivery to the email service |
 
-## How it connects to the rest of the system
-Controllers call into the service layer to perform secure auth actions and slot availability checks, while the service layer reads from Prisma and JWT utilities. This keeps HTTP handlers thin and keeps business rules centralised. The notification service connects the booking and reminder flows to email delivery and the background retry job.
+## Architectural responsibilities
+The service layer is responsible for:
+- enforcing business rules
+- coordinating Prisma transactions
+- validating ownership and access boundaries
+- handling external integrations without leaking raw HTTP concerns into controllers
+- exposing deterministic logic that is easy to unit test
+
+## External integrations
+The service layer intentionally keeps integrations decoupled:
+- llm.service.ts handles AI summarisation and graceful fallback behavior
+- email.service.ts handles SMTP delivery
+- notification.service.ts manages queueing, retry logic, and notification status tracking
+
+This separation keeps the overall system resilient when an external provider is unavailable or misconfigured.
+
+## Interaction with the rest of the app
+Controllers call into services for domain actions, and services read/write Prisma models and shared utilities. This keeps request handlers thin while centralising critical business behavior in one place.
