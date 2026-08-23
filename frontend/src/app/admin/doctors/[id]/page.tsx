@@ -37,7 +37,7 @@ export default function DoctorProfilePage() {
       <div className="rounded-lg border bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xl font-semibold">Upcoming Availability</h3>
-          <Link href="/doctors" className="text-sm text-blue-600">Back to list</Link>
+          <Link href="/admin/doctors" className="text-sm text-blue-600">Back to list</Link>
         </div>
 
         <div className="flex flex-wrap gap-3">

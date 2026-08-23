@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-lg border bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold">Operational Overview</h2>
-            <Link href="/doctors" className="text-sm text-blue-600">View doctors</Link>
+            <Link href="/admin/doctors" className="text-sm text-blue-600">View doctors</Link>
           </div>
 
           <div className="space-y-4">

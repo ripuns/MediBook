@@ -12,7 +12,7 @@ export default function AdminDoctorsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Doctors</h2>
-        <Link href="/doctors/new" className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+        <Link href="/admin/doctors/new" className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white">
           Add Doctor
         </Link>
       </div>
@@ -52,7 +52,7 @@ export default function AdminDoctorsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/doctors/${doctor.id}`} className="text-blue-600">
+                    <Link href={`/admin/doctors/${doctor.id}`} className="text-blue-600">
                       View
                     </Link>
                   </td>
