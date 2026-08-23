@@ -27,9 +27,10 @@ export default function Sidebar() {
 
       <nav className="space-y-1">
         <NavItem href="/" label="Home" />
-        <NavItem href="/bookings" label="Bookings" />
-        <NavItem href="/calendar" label="Calendar" />
-        <NavItem href="/profile" label="Profile" />
+        <NavItem href="/patient/dashboard" label="Dashboard" />
+        <NavItem href="/patient/doctors" label="Doctors" />
+        <NavItem href="/patient/appointments" label="Appointments" />
+        <NavItem href="/patient/book/dr-101" label="Book visit" />
       </nav>
 
       <div className="mt-6 border-t pt-4">
