@@ -12,7 +12,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   GOOGLE_REDIRECT_URI: z.string().url(),
-  FRONTEND_URL: z.string().url(),
+  NEXT_PUBLIC_API_URL: z.string().url(),
 });
 
 export const env = envSchema.parse(process.env);

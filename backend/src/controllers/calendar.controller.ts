@@ -77,7 +77,7 @@ export async function calendarCallbackController(req: Request, res: Response, ne
         : {}),
     });
 
-    const redirectUrl = `${env.FRONTEND_URL.replace(/\/$/, '')}/calendar-connected`;
+    const redirectUrl = `${env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}/calendar-connected`;
     return res.redirect(redirectUrl);
   } catch (error) {
     return next(error);
