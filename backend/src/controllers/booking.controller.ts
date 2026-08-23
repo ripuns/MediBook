@@ -2,11 +2,11 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { prisma } from '../lib/prisma';
 import {
-  confirmSlot,
+  cancelSlot,
   generateSlots,
   holdSlot,
-  cancelSlot,
 } from '../services/booking.service';
+import { confirmAppointmentWithIntegrations } from './patient.controller';
 
 export async function listDoctorSlotsController(req: Request, res: Response, next: NextFunction) {
   try {
@@ -95,7 +95,12 @@ export async function confirmSlotController(req: Request, res: Response, next: N
       return res.status(400).json({ success: false, message: 'Missing appointmentId.' });
     }
 
-    const result = await confirmSlot({ prisma, appointmentId, patientId: userId, symptoms, preVisitSummary });
+    const result = await confirmAppointmentWithIntegrations({
+      appointmentId,
+      patientId: userId,
+      symptoms,
+      preVisitSummary,
+    });
 
     return res.status(200).json({ success: true, data: result });
   } catch (error) {

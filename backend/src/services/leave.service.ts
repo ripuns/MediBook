@@ -1,5 +1,8 @@
 import type { PrismaClient } from '@prisma/client';
 
+import { deleteEvent } from '../lib/calendar';
+import { queueNotification } from './notification.service';
+
 function toDateOnly(value: string | Date): Date {
   const nextDate = typeof value === 'string' ? new Date(value) : new Date(value.getTime());
 
@@ -52,13 +55,67 @@ export async function createDoctorLeave({
     throw error;
   }
 
-  return prisma.leaveDay.create({
+  const createdLeave = await prisma.leaveDay.create({
     data: {
       doctorId: doctor.id,
       date: normalizedDate,
       reason: reason ?? null,
     },
   });
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      doctorId: doctor.id,
+      slotStart: {
+        gte: new Date(`${normalizedDate.toISOString().slice(0, 10)}T00:00:00.000Z`),
+        lt: new Date(`${normalizedDate.toISOString().slice(0, 10)}T23:59:59.999Z`),
+      },
+      status: 'CONFIRMED',
+    },
+    include: {
+      patient: { select: { id: true, name: true, email: true } },
+      doctor: { include: { user: { select: { id: true, name: true, email: true } } } },
+    },
+  });
+
+  for (const appointment of appointments) {
+    await prisma.appointment.update({
+      where: { id: appointment.id },
+      data: {
+        status: 'CANCELLED',
+        holdExpiresAt: null,
+      },
+    });
+
+    await queueNotification({
+      appointmentId: appointment.id,
+      type: 'leave_cancelled',
+      channel: 'EMAIL',
+      payload: {
+        to: appointment.patient.email,
+        subject: 'Appointment cancelled due to doctor leave',
+        text: `Your appointment on ${appointment.slotStart.toISOString()} has been cancelled because your doctor is on leave.`,
+      },
+    });
+
+    if (appointment.googleEventIdPatient) {
+      try {
+        await deleteEvent(appointment.patient.id, appointment.googleEventIdPatient);
+      } catch (error) {
+        console.warn('Failed to delete patient calendar event for leave cancellation:', error);
+      }
+    }
+
+    if (appointment.googleEventIdDoctor) {
+      try {
+        await deleteEvent(appointment.doctor.user.id, appointment.googleEventIdDoctor);
+      } catch (error) {
+        console.warn('Failed to delete doctor calendar event for leave cancellation:', error);
+      }
+    }
+  }
+
+  return createdLeave;
 }
 
 export async function listDoctorLeaves({

@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   doctorAppointmentsController,
+  doctorCompleteAppointmentController,
   doctorProfileController,
   updateDoctorProfileController,
 } from '../controllers/doctor.controller';
@@ -12,5 +13,6 @@ const router = Router();
 router.get('/profile', requireAuth, requireRole(['DOCTOR']), doctorProfileController);
 router.put('/profile', requireAuth, requireRole(['DOCTOR']), updateDoctorProfileController);
 router.get('/appointments', requireAuth, requireRole(['DOCTOR']), doctorAppointmentsController);
+router.post('/appointments/:appointmentId/complete', requireAuth, requireRole(['DOCTOR']), doctorCompleteAppointmentController);
 
 export default router;
