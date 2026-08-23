@@ -109,27 +109,43 @@ export async function holdSlot({
   const start = new Date(slotStart);
   const end = new Date(slotEnd);
 
-  // We do the conflict check and insert inside a single transaction so two near-simultaneous
-  // requests cannot both pass the same availability check before either one writes.
+  // We do the conflict check and slot reservation update inside a single transaction so two
+  // near-simultaneous requests cannot both pass the same availability check before either one writes.
   return prisma.$transaction(async (tx) => {
-    const conflict = await tx.appointment.findFirst({
+    const now = new Date();
+    const existing = await tx.appointment.findUnique({
       where: {
-        doctorId,
-        slotStart: start,
-        OR: [
-          { status: 'CONFIRMED' },
-          {
-            status: 'HELD',
-            holdExpiresAt: { gt: new Date() },
-          },
-        ],
+        doctorId_slotStart: {
+          doctorId,
+          slotStart: start,
+        },
       },
     });
 
-    if (conflict) {
-      const error = new Error('SLOT_TAKEN') as Error & { statusCode?: number };
-      error.statusCode = 409;
-      throw error;
+    if (existing) {
+      if (existing.status === 'CONFIRMED' || existing.status === 'COMPLETED') {
+        const error = new Error('SLOT_TAKEN') as Error & { statusCode?: number };
+        error.statusCode = 409;
+        throw error;
+      }
+
+      if (existing.status === 'HELD' && existing.holdExpiresAt && existing.holdExpiresAt > now) {
+        const error = new Error('SLOT_TAKEN') as Error & { statusCode?: number };
+        error.statusCode = 409;
+        throw error;
+      }
+
+      return tx.appointment.update({
+        where: { id: existing.id },
+        data: {
+          patientId,
+          slotEnd: end,
+          status: 'HELD',
+          holdExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
+          symptoms: null,
+          preVisitSummary: Prisma.JsonNull,
+        },
+      });
     }
 
     return tx.appointment.create({
