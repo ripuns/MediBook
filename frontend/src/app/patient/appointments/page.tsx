@@ -1,45 +1,70 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AppointmentCard, { type Appointment } from '@/components/appointments/AppointmentCard';
+import api from '@/lib/api';
 
-const initialAppointments: Appointment[] = [
-  {
-    id: 'apt-1001',
-    doctorName: 'Dr. Maya Patel',
-    specialty: 'Cardiology',
-    date: 'Tue, 26 Aug 2026',
-    time: '9:30 AM',
-    location: 'Downtown Clinic',
-    status: 'Confirmed',
-  },
-  {
-    id: 'apt-1002',
-    doctorName: 'Dr. Leo Nguyen',
-    specialty: 'Dermatology',
-    date: 'Thu, 28 Aug 2026',
-    time: '2:00 PM',
-    location: 'North Wing',
-    status: 'Pending',
-  },
-  {
-    id: 'apt-1003',
-    doctorName: 'Dr. Aisha Khan',
-    specialty: 'Pediatrics',
-    date: 'Mon, 1 Sep 2026',
-    time: '11:15 AM',
-    location: 'Children Center',
-    status: 'Completed',
-  },
-];
+function mapAppointmentStatus(status: string): Appointment['status'] {
+  switch (status) {
+    case 'CONFIRMED':
+      return 'Confirmed';
+    case 'HELD':
+      return 'Pending';
+    case 'COMPLETED':
+      return 'Completed';
+    case 'CANCELLED':
+      return 'Cancelled';
+    default:
+      return 'Pending';
+  }
+}
+
+function getDisplayDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+}
+
+function getDisplayTime(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+}
 
 export default function PatientAppointmentsPage() {
-  const [appointments, setAppointments] = useState(initialAppointments);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleCancel = (id: string) => {
-    setAppointments((current) =>
-      current.map((apt) => (apt.id === id ? { ...apt, status: 'Cancelled' } : apt)),
-    );
+  useEffect(() => {
+    async function load() {
+      try {
+        const resp = await api.get('/patient/appointments');
+        const list = Array.isArray(resp.data?.data) ? resp.data.data : [];
+        setAppointments(list.map((appointment: any) => ({
+          id: appointment.id,
+          doctorName: appointment.doctor?.user?.name ? `Dr. ${appointment.doctor.user.name}` : 'Doctor',
+          specialty: appointment.doctor?.specialisation ?? 'General care',
+          date: getDisplayDate(appointment.slotStart),
+          time: getDisplayTime(appointment.slotStart),
+          location: 'Clinic schedule',
+          status: mapAppointmentStatus(appointment.status),
+        })));
+      } catch (error) {
+        console.warn('Failed to load patient appointments', error);
+        setAppointments([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
+
+  const handleCancel = async (id: string) => {
+    try {
+      await api.post('/booking/cancel', { appointmentId: id });
+      setAppointments((current) => current.map((apt) => (apt.id === id ? { ...apt, status: 'Cancelled' } : apt)));
+    } catch (error) {
+      console.warn('Failed to cancel appointment', error);
+    }
   };
 
   return (
@@ -47,15 +72,19 @@ export default function PatientAppointmentsPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">My appointments</h2>
         <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-          {appointments.length} total
+          {loading ? 'Loading…' : `${appointments.length} total`}
         </span>
       </div>
 
-      <div className="grid gap-4">
-        {appointments.map((appointment) => (
-          <AppointmentCard key={appointment.id} appointment={appointment} onCancel={handleCancel} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="rounded-lg border bg-white p-5 text-sm text-gray-600 shadow-sm">Loading appointments…</div>
+      ) : (
+        <div className="grid gap-4">
+          {appointments.map((appointment) => (
+            <AppointmentCard key={appointment.id} appointment={appointment} onCancel={handleCancel} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

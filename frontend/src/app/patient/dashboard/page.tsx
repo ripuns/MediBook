@@ -1,12 +1,71 @@
-import Link from 'next/link';
+"use client";
 
-const upcoming = [
-  { doctor: 'Dr. Maya Patel', date: 'Tue, 9:30 AM', status: 'Confirmed' },
-  { doctor: 'Dr. Leo Nguyen', date: 'Thu, 2:00 PM', status: 'Pending' },
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
+
+const defaultUpcoming = [
+  { doctor: 'No upcoming appointments', date: 'Connect a doctor to get started', status: 'Pending' },
 ];
 
+function mapStatus(status: string) {
+  switch (status) {
+    case 'CONFIRMED':
+      return 'Confirmed';
+    case 'HELD':
+      return 'Pending';
+    case 'CANCELLED':
+      return 'Cancelled';
+    case 'COMPLETED':
+      return 'Completed';
+    default:
+      return 'Pending';
+  }
+}
+
+function formatDateTime(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
+}
+
 export default function PatientDashboardPage() {
+  const [upcoming, setUpcoming] = useState(defaultUpcoming);
+  const [doctorCount, setDoctorCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const calendarConnected = true;
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const [appointmentsRes, doctorsRes] = await Promise.all([
+          api.get('/patient/appointments').catch(() => ({ data: { data: [] } })),
+          api.get('/doctor/directory').catch(() => ({ data: { data: [] } })),
+        ]);
+
+        const appointments = Array.isArray(appointmentsRes.data?.data) ? appointmentsRes.data.data : [];
+        const doctors = Array.isArray(doctorsRes.data?.data) ? doctorsRes.data.data : [];
+
+        setDoctorCount(doctors.length);
+        setUpcoming(
+          appointments.slice(0, 2).map((appointment: any) => ({
+            doctor: appointment.doctor?.user?.name ? `Dr. ${appointment.doctor.user.name}` : 'Doctor visit',
+            date: formatDateTime(appointment.slotStart),
+            status: mapStatus(appointment.status),
+          })),
+        );
+      } catch (error) {
+        console.warn('Patient dashboard load failed', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -31,15 +90,15 @@ export default function PatientDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border bg-white p-4 shadow-sm">
           <div className="text-sm text-gray-500">Upcoming visits</div>
-          <div className="mt-2 text-3xl font-bold">2</div>
+          <div className="mt-2 text-3xl font-bold">{loading ? '…' : upcoming.length}</div>
         </div>
         <div className="rounded-lg border bg-white p-4 shadow-sm">
           <div className="text-sm text-gray-500">Available doctors</div>
-          <div className="mt-2 text-3xl font-bold">12</div>
+          <div className="mt-2 text-3xl font-bold">{doctorCount}</div>
         </div>
         <div className="rounded-lg border bg-white p-4 shadow-sm">
           <div className="text-sm text-gray-500">Care reminders</div>
-          <div className="mt-2 text-3xl font-bold">4</div>
+          <div className="mt-2 text-3xl font-bold">{Math.max(1, Math.min(4, upcoming.length + 1))}</div>
         </div>
       </div>
 
@@ -51,12 +110,14 @@ export default function PatientDashboardPage() {
 
         <div className="space-y-3">
           {upcoming.map((appt) => (
-            <div key={appt.doctor} className="flex items-center justify-between rounded border p-3">
+            <div key={`${appt.doctor}-${appt.date}`} className="flex items-center justify-between rounded border p-3">
               <div>
                 <div className="font-medium">{appt.doctor}</div>
                 <div className="text-sm text-gray-500">{appt.date}</div>
               </div>
-              <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-700">{appt.status}</span>
+              <span className={`rounded-full px-2 py-1 text-xs ${appt.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-700' : appt.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>
+                {appt.status}
+              </span>
             </div>
           ))}
         </div>
