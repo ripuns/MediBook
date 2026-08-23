@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import SlotPicker from '@/components/booking/SlotPicker';
@@ -13,8 +13,9 @@ type Doctor = {
   bio?: string | null;
 };
 
-export default function BookDoctorPage({ params }: { params: { doctorId: string } }) {
+export default function BookDoctorPage({ params }: { params: Promise<{ doctorId: string }> }) {
   const router = useRouter();
+  const { doctorId } = React.use(params);
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [slots, setSlots] = useState<string[]>([]);
@@ -36,7 +37,7 @@ export default function BookDoctorPage({ params }: { params: { doctorId: string 
   useEffect(() => {
     async function loadDoctor() {
       try {
-        const resp = await api.get(`/doctor/${params.doctorId}`);
+        const resp = await api.get(`/doctor/${doctorId}`);
         setDoctor(resp.data?.data ?? null);
       } catch (error) {
         console.warn('Failed to load doctor', error);
@@ -47,7 +48,7 @@ export default function BookDoctorPage({ params }: { params: { doctorId: string 
     }
 
     loadDoctor();
-  }, [params.doctorId]);
+  }, [doctorId]);
 
   useEffect(() => {
     async function loadSlots() {
@@ -55,7 +56,7 @@ export default function BookDoctorPage({ params }: { params: { doctorId: string 
       setMessage(null);
 
       try {
-        const resp = await api.get(`/booking/doctor/${params.doctorId}/slots`, { params: { date } });
+        const resp = await api.get(`/booking/doctor/${doctorId}/slots`, { params: { date } });
         const nextSlots = Array.isArray(resp.data?.data?.slots) ? resp.data.data.slots : [];
         setSlots(nextSlots);
         setSelectedSlot((current) => (current && nextSlots.includes(current) ? current : nextSlots[0] ?? ''));
@@ -70,7 +71,7 @@ export default function BookDoctorPage({ params }: { params: { doctorId: string 
     }
 
     loadSlots();
-  }, [date, params.doctorId]);
+  }, [date, doctorId]);
 
   const handleConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +89,7 @@ export default function BookDoctorPage({ params }: { params: { doctorId: string 
       const slotEnd = new Date(new Date(slotStart).getTime() + 30 * 60 * 1000).toISOString();
 
       const holdResponse = await api.post('/booking/hold', {
-        doctorId: params.doctorId,
+        doctorId: doctorId,
         slotStart,
         slotEnd,
       });
