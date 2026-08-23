@@ -1,16 +1,17 @@
 # Lib
 
 ## Purpose
-This folder contains reusable backend utilities that are shared across services, controllers, and jobs. It centralises database access, shared data helpers, and common application logic that should not live in individual route handlers.
+This folder contains reusable backend utilities shared across services, controllers, and jobs. It centralises database access, auth helpers, and integration logic so route handlers and business code stay focused.
 
 ## Why a separate folder?
-Libraries are cross-cutting concerns with broad reuse across the backend. Keeping them in a dedicated folder gives the application a clear place for shared infrastructure logic and prevents controllers and services from re-implementing the same boilerplate.
+Libraries are cross-cutting concerns that are used in many parts of the backend. Keeping them in one place makes the codebase easier to maintain, test, and extend without duplicating common setup or token handling logic.
 
 ## Files in this folder
 | File | What it does |
 |------|--------------|
-| prisma.ts | Exposes the single Prisma client instance used throughout the backend |
-| jwt.ts | Signs and verifies access/refresh JWTs for authentication and session renewal |
+| prisma.ts | Exposes the shared Prisma client instance used across the backend |
+| jwt.ts | Signs and verifies access and refresh tokens for authentication flows |
+| calendar.ts | Builds the Google OAuth client, stores calendar tokens, and creates/updates/deletes Google Calendar events |
 
 ## How it connects to the rest of the system
-The Prisma singleton and JWT helpers are imported by services, controllers, and middleware whenever they need database access or authentication tokens. This keeps data access and auth flows consistent, testable, and decoupled from route logic.
+The Prisma singleton, JWT helpers, and calendar utility are imported by services and controllers whenever they need database access, auth tokens, or Google Calendar actions. This keeps infrastructure concerns consistent and reduces duplication across the app.
