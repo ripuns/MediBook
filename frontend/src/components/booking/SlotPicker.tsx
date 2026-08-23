@@ -2,21 +2,18 @@
 
 import React from 'react';
 
-const slots = [
-  'Today, 9:00 AM',
-  'Today, 11:30 AM',
-  'Tomorrow, 9:30 AM',
-  'Tomorrow, 1:00 PM',
-  'Wed, 10:15 AM',
-  'Wed, 3:45 PM',
-  'Thu, 8:30 AM',
-  'Thu, 2:00 PM',
-];
+export type SlotPickerProps = {
+  selectedSlot: string;
+  onSelect: (slot: string) => void;
+  slots: string[];
+  loading?: boolean;
+};
 
-export default function SlotPicker({ selectedSlot, onSelect }: { selectedSlot: string; onSelect: (slot: string) => void }) {
+export default function SlotPicker({ selectedSlot, onSelect, slots, loading }: SlotPickerProps) {
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-semibold">Choose a time slot</h3>
+      {loading ? <div className="text-sm text-gray-500">Loading available slots…</div> : null}
       <div className="flex flex-wrap gap-3">
         {slots.map((slot) => (
           <button
