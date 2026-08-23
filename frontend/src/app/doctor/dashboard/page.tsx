@@ -29,14 +29,20 @@ function formatTime(value: string) {
 
 export default function DoctorDashboardPage() {
   const [queue, setQueue] = useState<any[]>([]);
+  const [calendarConnected, setCalendarConnected] = useState(false);
+  const [calendarLoading, setCalendarLoading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const calendarConnected = true;
 
   useEffect(() => {
     async function load() {
       try {
-        const resp = await api.get('/doctor/appointments');
-        const list = Array.isArray(resp.data?.data) ? resp.data.data : [];
+        const [appointmentsRes, calendarRes] = await Promise.all([
+          api.get('/doctor/appointments'),
+          api.get('/calendar/status').catch(() => ({ data: { data: { connected: false } } })),
+        ]);
+
+        const list = Array.isArray(appointmentsRes.data?.data) ? appointmentsRes.data.data : [];
+        setCalendarConnected(Boolean(calendarRes.data?.data?.connected));
         setQueue(list.slice(0, 5).map((appointment: any) => ({
           id: appointment.id,
           patient: appointment.patient?.name ?? 'Patient',
@@ -54,6 +60,21 @@ export default function DoctorDashboardPage() {
     load();
   }, []);
 
+  const handleConnectCalendar = async () => {
+    setCalendarLoading(true);
+    try {
+      const response = await api.get('/calendar/connect');
+      const url = response.data?.data?.url;
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.warn('Failed to open calendar connect flow', error);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 rounded-lg border bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -68,8 +89,13 @@ export default function DoctorDashboardPage() {
           <span className={`rounded-full px-2 py-1 text-xs font-medium ${calendarConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-700'}`}>
             {calendarConnected ? 'Connected' : 'Disconnected'}
           </span>
-          <button type="button" className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white">
-            {calendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
+          <button
+            type="button"
+            onClick={handleConnectCalendar}
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            disabled={calendarLoading}
+          >
+            {calendarLoading ? 'Opening…' : calendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
           </button>
         </div>
       </div>
