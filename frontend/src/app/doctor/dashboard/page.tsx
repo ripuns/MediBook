@@ -7,8 +7,28 @@ const queue = [
 ];
 
 export default function DoctorDashboardPage() {
+  const calendarConnected = true;
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-col gap-4 rounded-lg border bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Google Calendar</h2>
+          <div className="text-sm text-gray-600">
+            {calendarConnected ? 'Connected and syncing visit slots' : 'Not connected'}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className={`rounded-full px-2 py-1 text-xs font-medium ${calendarConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-700'}`}>
+            {calendarConnected ? 'Connected' : 'Disconnected'}
+          </span>
+          <button type="button" className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+            {calendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
+          </button>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border bg-white p-4 shadow-sm">
           <div className="text-sm text-gray-500">Today&apos;s visits</div>
