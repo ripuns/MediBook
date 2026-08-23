@@ -1,20 +1,33 @@
 # Routes
 
 ## Purpose
-This folder contains the HTTP route definitions for the MediBook API. It maps URL paths to controller functions and keeps the routing layer focused on endpoint registration.
+This folder contains the Express route definitions for the MediBook API. Each route maps a URL and HTTP method to the appropriate controller and applies middleware for authentication or role enforcement.
 
-## Why a separate folder?
-Routes define the external contract of the application and should be separate from business logic. Keeping them organised here allows the app to grow without merging route registration into controllers or server bootstrap files.
+## Why this folder exists
+Routes define the public contract of the backend. Separating them from controllers and services keeps API registration clean and makes it easier to manage auth, authorization, and endpoint versioning as the app grows.
 
-## Files in this folder
+## Current route modules
 | File | What it does |
 |------|--------------|
-| auth.routes.ts | Exposes the public authentication endpoints for register, login, refresh, logout, and me |
-| admin.routes.ts | Protects admin overview endpoints behind `requireAuth` and `requireRole(['ADMIN'])` |
-| patient.routes.ts | Protects patient appointment endpoints behind `requireAuth` and `requireRole(['PATIENT'])` |
-| doctor.routes.ts | Protects doctor profile and appointment endpoints behind `requireAuth` and `requireRole(['DOCTOR'])` |
-| booking.routes.ts | Public-facing booking endpoints: list doctor slots, hold, confirm, and cancel bookings. Uses `requireAuth` and role checks where appropriate. |
-| calendar.routes.ts | Exposes Google Calendar OAuth connect, callback, and status endpoints for authenticated users. |
+| `auth.routes.ts` | Exposes public auth endpoints for registration, login, refresh, logout, and current-user lookup. |
+| `admin.routes.ts` | Protects admin endpoints behind `requireAuth` and `requireRole(['ADMIN'])`. |
+| `patient.routes.ts` | Protects patient endpoints for appointment history and patient-specific booking actions. |
+| `doctor.routes.ts` | Protects doctor endpoints for profile management, appointment history, and completion actions. |
+| `booking.routes.ts` | Handles slot listing, hold, confirm, and cancel flows for patient booking activity. |
+| `calendar.routes.ts` | Handles Google Calendar OAuth connect, callback, and connection-status endpoints. |
 
-## How it connects to the rest of the system
-The route files are mounted by the Express app bootstrap, and each route forwards requests to the corresponding controller and service logic. This creates a clean flow from HTTP request to domain action and response.
+## Route responsibilities
+- request entry points are registered in `src/app.ts`
+- controllers handle request parsing and response shaping
+- services perform the actual business logic and Prisma operations
+- auth middleware enforces login and role requirements before controllers execute
+
+## Typical flow
+A request moves through the stack like this:
+1. Express route receives the request
+2. auth/role middleware checks access
+3. controller validates the payload and calls the relevant service
+4. service performs the domain logic and writes to Prisma
+5. controller returns the final JSON response
+
+This keeps the HTTP layer thin while preserving a clear and predictable API structure.
