@@ -14,6 +14,7 @@ Routes define the external contract of the application and should be separate fr
 | patient.routes.ts | Protects patient appointment endpoints behind `requireAuth` and `requireRole(['PATIENT'])` |
 | doctor.routes.ts | Protects doctor profile and appointment endpoints behind `requireAuth` and `requireRole(['DOCTOR'])` |
 | booking.routes.ts | Public-facing booking endpoints: list doctor slots, hold, confirm, and cancel bookings. Uses `requireAuth` and role checks where appropriate. |
+| calendar.routes.ts | Exposes Google Calendar OAuth connect, callback, and status endpoints for authenticated users. |
 
 ## How it connects to the rest of the system
 The route files are mounted by the Express app bootstrap, and each route forwards requests to the corresponding controller and service logic. This creates a clean flow from HTTP request to domain action and response.

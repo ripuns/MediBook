@@ -13,6 +13,7 @@ Controllers isolate request parsing and response mapping from domain logic. This
 | admin.controller.ts | Exposes admin-only summary metrics such as user totals, doctor totals, and active held slots |
 | patient.controller.ts | Returns a patient’s appointments with nested doctor information |
 | doctor.controller.ts | Exposes doctor profile, updates, and appointment history |
+| calendar.controller.ts | Starts the Google OAuth flow, handles the OAuth callback, and reports whether a user has connected Google Calendar |
 
 ## How it connects to the rest of the system
 The controller layer receives Express requests, checks authentication and role requirements, calls the service layer, and sends the final JSON response back to the client. This keeps the app modular while preserving a single, predictable API contract.
