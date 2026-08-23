@@ -1,0 +1,51 @@
+"use client";
+
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+
+const NavItem: React.FC<{ href: string; label: string }> = ({ href, label }) => {
+  const path = usePathname();
+  const active = path === href;
+  return (
+    <Link href={href} className={`block px-3 py-2 rounded ${active ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+      {label}
+    </Link>
+  );
+};
+
+export default function Sidebar() {
+  const { user, logout } = useAuth();
+
+  return (
+    <aside className="w-64 bg-white border-r h-screen p-4 sticky top-0">
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold">MediBook</h3>
+        <div className="text-sm text-gray-500">{user?.email ?? 'Guest'}</div>
+      </div>
+
+      <nav className="space-y-1">
+        <NavItem href="/" label="Home" />
+        <NavItem href="/bookings" label="Bookings" />
+        <NavItem href="/calendar" label="Calendar" />
+        <NavItem href="/profile" label="Profile" />
+      </nav>
+
+      <div className="mt-6 border-t pt-4">
+        {user ? (
+          <button
+            onClick={() => void logout()}
+            className="w-full text-left px-3 py-2 rounded text-red-600 hover:bg-red-50"
+          >
+            Logout
+          </button>
+        ) : (
+          <Link href="/auth/login" className="block px-3 py-2 rounded text-blue-600 hover:bg-blue-50">
+            Login
+          </Link>
+        )}
+      </div>
+    </aside>
+  );
+}
