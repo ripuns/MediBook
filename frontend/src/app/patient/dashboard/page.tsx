@@ -35,21 +35,24 @@ function formatDateTime(value: string) {
 export default function PatientDashboardPage() {
   const [upcoming, setUpcoming] = useState(defaultUpcoming);
   const [doctorCount, setDoctorCount] = useState(0);
+  const [calendarConnected, setCalendarConnected] = useState(false);
   const [loading, setLoading] = useState(true);
-  const calendarConnected = true;
+  const [calendarLoading, setCalendarLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        const [appointmentsRes, doctorsRes] = await Promise.all([
+        const [appointmentsRes, doctorsRes, calendarRes] = await Promise.all([
           api.get('/patient/appointments').catch(() => ({ data: { data: [] } })),
           api.get('/doctor/directory').catch(() => ({ data: { data: [] } })),
+          api.get('/calendar/status').catch(() => ({ data: { data: { connected: false } } })),
         ]);
 
         const appointments = Array.isArray(appointmentsRes.data?.data) ? appointmentsRes.data.data : [];
         const doctors = Array.isArray(doctorsRes.data?.data) ? doctorsRes.data.data : [];
 
         setDoctorCount(doctors.length);
+        setCalendarConnected(Boolean(calendarRes.data?.data?.connected));
         setUpcoming(
           appointments.slice(0, 2).map((appointment: any) => ({
             doctor: appointment.doctor?.user?.name ? `Dr. ${appointment.doctor.user.name}` : 'Doctor visit',
@@ -67,6 +70,21 @@ export default function PatientDashboardPage() {
     load();
   }, []);
 
+  const handleConnectCalendar = async () => {
+    setCalendarLoading(true);
+    try {
+      const response = await api.get('/calendar/connect');
+      const url = response.data?.data?.url;
+      if (url) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.warn('Calendar connect failed', error);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 rounded-lg border bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -81,8 +99,13 @@ export default function PatientDashboardPage() {
           <span className={`rounded-full px-2 py-1 text-xs font-medium ${calendarConnected ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-700'}`}>
             {calendarConnected ? 'Connected' : 'Disconnected'}
           </span>
-          <button type="button" className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white">
-            {calendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
+          <button
+            type="button"
+            onClick={handleConnectCalendar}
+            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            disabled={calendarLoading}
+          >
+            {calendarLoading ? 'Opening…' : calendarConnected ? 'Reconnect Google Calendar' : 'Connect Google Calendar'}
           </button>
         </div>
       </div>
