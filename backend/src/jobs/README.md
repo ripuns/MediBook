@@ -5,11 +5,14 @@ This folder contains background tasks that run independently from the request li
 
 ## Files in this folder
 - `expiredHoldCleanup.ts` - runs a cron job every minute to cancel appointments that are still marked `HELD` after their `holdExpiresAt` timestamp has passed.
+- `notificationRetry.ts` - runs a cron job every five minutes to process queued email notifications and retry failed sends until they are successful or the retry cap is reached.
 
 ## Why it matters
-Held booking slots are temporary reservations. If they are not released automatically, expired holds can block real availability and create noisy double-booking edge cases.
+Held booking slots are temporary reservations. If they are not released automatically, expired holds can block real availability and create noisy double-booking edge cases. Queued notifications ensure reminder and confirmation emails are delivered reliably without blocking the request lifecycle.
 
 ## Runtime behavior
 - scheduled via `node-cron`
 - checks only `HELD` appointments with `holdExpiresAt < now`
 - converts expired holds into `CANCELLED` state and clears the expiry timestamp
+- processes `PENDING` or `FAILED` notification rows with a bounded retry attempt count
+- marks successful sends as `SENT` and exhausted retries as `GAVE_UP`
