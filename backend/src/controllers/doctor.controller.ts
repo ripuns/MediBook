@@ -6,6 +6,76 @@ import { summariseVisit } from '../services/llm.service';
 import { queueNotification } from '../services/notification.service';
 import { getDoctorAppointments, getDoctorProfileByUserId, updateDoctorProfile } from '../services/doctor.service';
 
+export async function listDoctorsController(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const doctors = await prisma.doctorProfile.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: doctors.map((doctor) => ({
+        id: doctor.id,
+        userId: doctor.userId,
+        name: doctor.user.name,
+        email: doctor.user.email,
+        specialisation: doctor.specialisation,
+        bio: doctor.bio,
+        slotDurationMin: doctor.slotDurationMin,
+        workingHours: doctor.workingHours,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function doctorByIdController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { doctorId } = req.params;
+    const doctor = await prisma.doctorProfile.findUnique({
+      where: { id: doctorId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: doctor.id,
+        userId: doctor.userId,
+        name: doctor.user.name,
+        email: doctor.user.email,
+        specialisation: doctor.specialisation,
+        bio: doctor.bio,
+        slotDurationMin: doctor.slotDurationMin,
+        workingHours: doctor.workingHours,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function doctorProfileController(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = req.user?.sub;
