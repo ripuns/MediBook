@@ -17,6 +17,7 @@ const NavItem: React.FC<{ href: string; label: string }> = ({ href, label }) => 
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const role = user?.role;
 
   return (
     <aside className="w-64 bg-white border-r h-screen p-4 sticky top-0">
@@ -26,14 +27,27 @@ export default function Sidebar() {
       </div>
 
       <nav className="space-y-1">
-        <NavItem href="/" label="Home" />
-        <NavItem href="/patient/dashboard" label="Dashboard" />
-        <NavItem href="/patient/doctors" label="Doctors" />
-        <NavItem href="/patient/appointments" label="Appointments" />
-        <NavItem href="/patient/book/dr-101" label="Book visit" />
-        <NavItem href="/admin/dashboard" label="Admin" />
-        <NavItem href="/admin/appointments" label="Admin Appointments" />
-        <NavItem href="/admin/notifications" label="Admin Notifications" />
+        {role === 'DOCTOR' ? (
+          <>
+            <NavItem href="/doctor/dashboard" label="Dashboard" />
+            <NavItem href="/doctor/dashboard" label="Appointments" />
+          </>
+        ) : null}
+        {role === 'ADMIN' ? (
+          <>
+            <NavItem href="/admin/dashboard" label="Dashboard" />
+            <NavItem href="/admin/doctors" label="Doctors" />
+            <NavItem href="/admin/appointments" label="Appointments" />
+            <NavItem href="/admin/notifications" label="Notifications" />
+          </>
+        ) : null}
+        {role === 'PATIENT' || !role ? (
+          <>
+            <NavItem href="/patient/dashboard" label="Dashboard" />
+            <NavItem href="/patient/doctors" label="Doctors" />
+            <NavItem href="/patient/appointments" label="Appointments" />
+          </>
+        ) : null}
       </nav>
 
       <div className="mt-6 border-t pt-4">
