@@ -28,6 +28,83 @@ export async function adminOverviewController(_req: Request, res: Response, next
   }
 }
 
+export async function listAdminAppointmentsController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { status, doctorId, date } = req.query as {
+      status?: string;
+      doctorId?: string;
+      date?: string;
+    };
+
+    const dateFilter = date
+      ? {
+          gte: new Date(`${date}T00:00:00.000Z`),
+          lt: new Date(`${date}T23:59:59.999Z`),
+        }
+      : undefined;
+
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        ...(status ? { status: status as never } : {}),
+        ...(doctorId ? { doctorId } : {}),
+        ...(dateFilter ? { slotStart: dateFilter } : {}),
+      },
+      orderBy: { slotStart: 'desc' },
+      include: {
+        patient: {
+          select: { id: true, name: true, email: true },
+        },
+        doctor: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true },
+            },
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: appointments,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function listAdminNotificationsController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { status } = req.query as { status?: string };
+
+    const notifications = await prisma.notificationLog.findMany({
+      where: {
+        ...(status ? { status: status as never } : {}),
+      },
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        appointment: {
+          include: {
+            patient: { select: { id: true, name: true, email: true } },
+            doctor: {
+              include: {
+                user: { select: { id: true, name: true, email: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: notifications,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function listAdminDoctorsController(_req: Request, res: Response, next: NextFunction) {
   try {
     const doctors = await prisma.doctorProfile.findMany({

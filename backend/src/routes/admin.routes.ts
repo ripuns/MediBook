@@ -6,7 +6,9 @@ import {
   createAdminLeaveController,
   deleteAdminDoctorController,
   deleteAdminLeaveController,
+  listAdminAppointmentsController,
   listAdminDoctorsController,
+  listAdminNotificationsController,
   updateAdminDoctorController,
 } from '../controllers/admin.controller';
 import { requireAuth, requireRole } from '../middleware/auth';
@@ -14,6 +16,8 @@ import { requireAuth, requireRole } from '../middleware/auth';
 const router = Router();
 
 router.get('/overview', requireAuth, requireRole(['ADMIN']), adminOverviewController);
+router.get('/appointments', requireAuth, requireRole(['ADMIN']), listAdminAppointmentsController);
+router.get('/notifications', requireAuth, requireRole(['ADMIN']), listAdminNotificationsController);
 router.get('/doctors', requireAuth, requireRole(['ADMIN']), listAdminDoctorsController);
 router.post('/doctors', requireAuth, requireRole(['ADMIN']), createAdminDoctorController);
 router.put('/doctors/:id', requireAuth, requireRole(['ADMIN']), updateAdminDoctorController);
