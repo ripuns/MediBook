@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import type { Prisma } from '@prisma/client';
 
 import { prisma } from '../lib/prisma';
 import {
@@ -28,7 +29,7 @@ export async function listDoctorSlotsController(req: Request, res: Response, nex
 
     // Load leaves for the doctor that match the requested date
     const leaves = await prisma.leaveDay.findMany({ where: { doctorId, date: new Date(`${date}T00:00:00.000Z`) } });
-    const leaveDates = leaves.map((l) => l.date);
+    const leaveDates = leaves.map((l: (typeof leaves)[number]) => l.date);
 
     // Load appointments for the doctor on that date
     const dayStart = new Date(`${date}T00:00:00.000Z`);
@@ -43,7 +44,7 @@ export async function listDoctorSlotsController(req: Request, res: Response, nex
       },
     });
 
-    const conflicts = appointments.map((a) => ({
+    const conflicts = appointments.map((a: (typeof appointments)[number]) => ({
       slotStart: a.slotStart,
       // Narrow the status to the SlotConflict expected literal types because the DB enum
       // contains more values but the query above restricts results to HELD or CONFIRMED.
@@ -90,7 +91,7 @@ export async function confirmSlotController(req: Request, res: Response, next: N
     }
 
     const appointmentId = (req.body?.appointmentId ?? req.params?.appointmentId) as string | undefined;
-    const { symptoms, preVisitSummary } = req.body as { symptoms?: string; preVisitSummary?: any };
+    const { symptoms, preVisitSummary } = req.body as { symptoms?: string; preVisitSummary?: Prisma.InputJsonValue };
 
     if (!appointmentId) {
       return res.status(400).json({ success: false, message: 'Missing appointmentId.' });

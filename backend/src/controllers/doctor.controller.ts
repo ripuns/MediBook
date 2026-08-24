@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import type { Prisma } from '@prisma/client';
 
 import { deleteEvent } from '../lib/calendar';
 import { prisma } from '../lib/prisma';
@@ -22,7 +23,7 @@ export async function listDoctorsController(_req: Request, res: Response, next: 
 
     return res.status(200).json({
       success: true,
-      data: doctors.map((doctor) => ({
+      data: doctors.map((doctor: (typeof doctors)[number]) => ({
         id: doctor.id,
         userId: doctor.userId,
         name: doctor.user.name,

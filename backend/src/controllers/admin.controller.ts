@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import type { NextFunction, Request, Response } from 'express';
+import type { Prisma } from '@prisma/client';
 
 import { prisma } from '../lib/prisma';
 import { getAdminOverview } from '../services/admin.service';
@@ -122,7 +123,7 @@ export async function listAdminDoctorsController(_req: Request, res: Response, n
 
     return res.status(200).json({
       success: true,
-      data: doctors.map((doctor) => ({
+      data: doctors.map((doctor: (typeof doctors)[number]) => ({
         id: doctor.id,
         userId: doctor.userId,
         name: doctor.user.name,
@@ -199,7 +200,7 @@ export async function createAdminDoctorController(req: Request, res: Response, n
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.user.create({
         data: {
           name,
