@@ -30,7 +30,7 @@ export default function Sidebar() {
         {role === 'DOCTOR' ? (
           <>
             <NavItem href="/doctor/dashboard" label="Dashboard" />
-            <NavItem href="/doctor/dashboard" label="Appointments" />
+            <NavItem href="/doctor/appointments" label="Appointments" />
           </>
         ) : null}
         {role === 'ADMIN' ? (
