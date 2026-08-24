@@ -15,7 +15,7 @@ const app = express();
 // Allow the frontend origin to talk to the API while keeping credentials enabled.
 // We keep a localhost fallback so the app still starts even if FRONTEND_URL is missing in dev.
 app.use(cors({
-  origin: [env.FRONTEND_URL, 'http://localhost:3000'],
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
 }));
 app.use(express.json());
