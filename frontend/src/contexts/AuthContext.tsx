@@ -41,12 +41,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }>= ({ children 
 
       try {
         const resp = await api.get('/auth/me');
-        if (resp.data?.data) setUser(resp.data.data as User);
+        if (resp.data?.data) {
+          const currentUser = resp.data.data as User;
+          setUser(currentUser);
+          if (currentUser.role) {
+            localStorage.setItem('userRole', currentUser.role);
+          }
+        }
       } catch (err) {
         console.warn('Could not fetch current user', err);
         // attempt logout cleanup
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRole');
       } finally {
         setLoading(false);
       }
@@ -66,7 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }>= ({ children 
       }
       // load user
       const me = await api.get('/auth/me');
-      setUser(me.data?.data ?? null);
+      const currentUser = me.data?.data ?? null;
+      setUser(currentUser);
+      if (currentUser?.role) {
+        localStorage.setItem('userRole', currentUser.role);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }>= ({ children 
     } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userRole');
       setUser(null);
     }
   };
@@ -97,7 +109,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }>= ({ children 
         if (data.tokens.refreshToken) localStorage.setItem('refreshToken', data.tokens.refreshToken);
       }
       const me = await api.get('/auth/me');
-      setUser(me.data?.data ?? null);
+      const currentUser = me.data?.data ?? null;
+      setUser(currentUser);
+      if (currentUser?.role) {
+        localStorage.setItem('userRole', currentUser.role);
+      }
     } finally {
       setLoading(false);
     }
