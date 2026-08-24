@@ -21,7 +21,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   GMAIL_USER: z.string().email().default(isTestEnv ? testDefaults.GMAIL_USER : ''),
   GMAIL_APP_PASSWORD: z.string().min(1).default(isTestEnv ? testDefaults.GMAIL_APP_PASSWORD : ''),
-  OPENAI_API_KEY: z.string().min(1).optional(),
+  GEMINI_API_KEY: z.string().min(1).optional(),
   GOOGLE_CLIENT_ID: z.string().min(1).default(isTestEnv ? testDefaults.GOOGLE_CLIENT_ID : ''),
   GOOGLE_CLIENT_SECRET: z.string().min(1).default(isTestEnv ? testDefaults.GOOGLE_CLIENT_SECRET : ''),
   GOOGLE_REDIRECT_URI: z.string().url().default(isTestEnv ? testDefaults.GOOGLE_REDIRECT_URI : ''),

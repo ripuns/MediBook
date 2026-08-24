@@ -1,3 +1,5 @@
+import { GoogleGenAI } from '@google/genai';
+
 export type PreVisitAssessment = {
   fallback?: boolean;
   urgencyLevel: 'Low' | 'Medium' | 'High';
@@ -36,6 +38,9 @@ Return ONLY valid JSON with exactly these keys:
   "warnings": ["any warnings, empty array if none"]
 }
 Clinical notes: <notes>`;
+
+const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
+const geminiClient = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
 export function buildPreVisitFallback(): PreVisitAssessment {
   return {
@@ -164,40 +169,24 @@ function parseJsonResponse(rawText: string): unknown {
   }
 }
 
-async function callOpenAI(prompt: string): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not configured.');
+async function callGemini(prompt: string): Promise<string> {
+  if (!geminiClient) {
+    throw new Error('GEMINI_API_KEY is not configured.');
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
+  const response = await geminiClient.models.generateContent({
+    model: 'gemini-1.5-flash',
+    contents: prompt,
+    config: {
+      responseMimeType: 'application/json',
       temperature: 0,
-      response_format: { type: 'json_object' },
-      messages: [{ role: 'user', content: prompt }],
-    }),
+    },
   });
 
-  if (!response.ok) {
-    const detail = await response.text();
-    throw new Error(`OpenAI request failed (${response.status}): ${detail}`);
-  }
-
-  const payload = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>; 
-  };
-
-  const content = payload.choices?.[0]?.message?.content;
+  const content = response.text;
 
   if (typeof content !== 'string' || content.trim().length === 0) {
-    throw new Error('OpenAI returned an empty response.');
+    throw new Error('Gemini returned an empty response.');
   }
 
   return content;
@@ -206,7 +195,7 @@ async function callOpenAI(prompt: string): Promise<string> {
 export async function analyseSymptoms(symptoms: string): Promise<PreVisitAssessment> {
   try {
     const prompt = PRE_VISIT_PROMPT.replace('<symptoms>', symptoms ?? '');
-    const rawText = await callOpenAI(prompt);
+    const rawText = await callGemini(prompt);
     const payload = parseJsonResponse(rawText);
 
     return payload ? normalisePreVisitPayload(payload) : buildPreVisitFallback();
@@ -218,7 +207,7 @@ export async function analyseSymptoms(symptoms: string): Promise<PreVisitAssessm
 export async function summariseVisit(notes: string): Promise<VisitSummary> {
   try {
     const prompt = POST_VISIT_PROMPT.replace('<notes>', notes ?? '');
-    const rawText = await callOpenAI(prompt);
+    const rawText = await callGemini(prompt);
     const payload = parseJsonResponse(rawText);
 
     return payload ? normalisePostVisitPayload(payload) : buildPostVisitFallback();
