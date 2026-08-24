@@ -67,7 +67,7 @@ export async function holdSlotController(req: Request, res: Response, next: Next
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    const { doctorId, slotStart, slotEnd } = req.body as { doctorId: string; slotStart: string; slotEnd: string };
+    const { doctorId, slotStart, slotEnd } = req.body as { doctorId?: string; slotStart?: string; slotEnd?: string };
 
     if (!doctorId || !slotStart || !slotEnd) {
       return res.status(400).json({ success: false, message: 'Missing required booking fields.' });
@@ -89,7 +89,8 @@ export async function confirmSlotController(req: Request, res: Response, next: N
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    const { appointmentId, symptoms, preVisitSummary } = req.body as { appointmentId: string; symptoms?: string; preVisitSummary?: any };
+    const appointmentId = (req.body?.appointmentId ?? req.params?.appointmentId) as string | undefined;
+    const { symptoms, preVisitSummary } = req.body as { symptoms?: string; preVisitSummary?: any };
 
     if (!appointmentId) {
       return res.status(400).json({ success: false, message: 'Missing appointmentId.' });
@@ -116,7 +117,7 @@ export async function cancelSlotController(req: Request, res: Response, next: Ne
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    const { appointmentId } = req.body as { appointmentId: string };
+    const appointmentId = (req.body?.appointmentId ?? req.params?.appointmentId) as string | undefined;
 
     if (!appointmentId) {
       return res.status(400).json({ success: false, message: 'Missing appointmentId.' });
