@@ -37,7 +37,7 @@ export default function BookDoctorPage({ params }: { params: Promise<{ doctorId:
   useEffect(() => {
     async function loadDoctor() {
       try {
-        const resp = await api.get(`/doctor/${doctorId}`);
+        const resp = await api.get(`/patient/doctors/${doctorId}`);
         setDoctor(resp.data?.data ?? null);
       } catch (error) {
         console.warn('Failed to load doctor', error);
@@ -56,7 +56,7 @@ export default function BookDoctorPage({ params }: { params: Promise<{ doctorId:
       setMessage(null);
 
       try {
-        const resp = await api.get(`/booking/doctor/${doctorId}/slots`, { params: { date } });
+        const resp = await api.get(`/patient/doctors/${doctorId}/slots`, { params: { date } });
         const nextSlots = Array.isArray(resp.data?.data?.slots) ? resp.data.data.slots : [];
         setSlots(nextSlots);
         setSelectedSlot((current) => (current && nextSlots.includes(current) ? current : nextSlots[0] ?? ''));
@@ -84,18 +84,18 @@ export default function BookDoctorPage({ params }: { params: Promise<{ doctorId:
     setSubmitting(true);
     setMessage(null);
 
-    try {
-      const slotStart = selectedSlot;
-      const slotEnd = new Date(new Date(slotStart).getTime() + 30 * 60 * 1000).toISOString();
+      try {
+        const slotStart = selectedSlot;
+        const slotEnd = new Date(new Date(slotStart).getTime() + 30 * 60 * 1000).toISOString();
 
-      const holdResponse = await api.post('/booking/hold', {
-        doctorId: doctorId,
+      const holdResponse = await api.post('/patient/appointments/hold', {
+        doctorId,
         slotStart,
         slotEnd,
       });
 
       const heldAppointment = holdResponse.data?.data;
-      const confirmed = await api.post('/booking/confirm', {
+      const confirmed = await api.put(`/patient/appointments/${heldAppointment.id}/confirm`, {
         appointmentId: heldAppointment.id,
         symptoms: form.symptoms,
         preVisitSummary: {

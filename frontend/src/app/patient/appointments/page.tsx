@@ -60,7 +60,7 @@ export default function PatientAppointmentsPage() {
 
   const handleCancel = async (id: string) => {
     try {
-      await api.post('/booking/cancel', { appointmentId: id });
+      await api.put(`/patient/appointments/${id}/cancel`, { appointmentId: id });
       setAppointments((current) => current.map((apt) => (apt.id === id ? { ...apt, status: 'Cancelled' } : apt)));
     } catch (error) {
       console.warn('Failed to cancel appointment', error);

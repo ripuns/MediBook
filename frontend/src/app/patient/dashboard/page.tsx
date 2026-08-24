@@ -53,7 +53,7 @@ export default function PatientDashboardPage() {
       try {
         const [appointmentsRes, doctorsRes, calendarRes] = await Promise.all([
           api.get('/patient/appointments').catch(() => ({ data: { data: [] } })),
-          api.get('/doctor/directory').catch(() => ({ data: { data: [] } })),
+          api.get('/patient/doctors').catch(() => ({ data: { data: [] } })),
           api.get('/calendar/status').catch(() => ({ data: { data: { connected: false } } })),
         ]);
 

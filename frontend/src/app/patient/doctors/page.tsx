@@ -12,7 +12,7 @@ export default function PatientDoctorsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const resp = await api.get('/doctor/directory');
+        const resp = await api.get('/patient/doctors');
         setDoctors(Array.isArray(resp.data?.data) ? resp.data.data : []);
       } catch (error) {
         console.warn('Failed to load doctors', error);
