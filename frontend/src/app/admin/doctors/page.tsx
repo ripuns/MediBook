@@ -19,7 +19,7 @@ export default function AdminDoctorsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const response = await api.get('/doctor/directory');
+        const response = await api.get('/admin/doctors');
         const list = Array.isArray(response.data?.data) ? response.data.data : [];
         setDoctors(list.map((doctor: any) => ({
           id: doctor.id,
@@ -78,9 +78,9 @@ export default function AdminDoctorsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <Link href={`/admin/doctors/${doctor.id}`} className="text-blue-600">
-                        View
-                      </Link>
+                        <Link href={`/admin/doctors/${doctor.id}`} className="text-blue-600">
+                          View
+                        </Link>
                     </td>
                   </tr>
                 ))

@@ -22,7 +22,7 @@ export default function DoctorProfilePage({ params }: { params: { id: string } }
   useEffect(() => {
     async function load() {
       try {
-        const response = await api.get(`/doctor/${params.id}`);
+        const response = await api.get(`/admin/doctors/${params.id}`);
         const nextDoctor = response.data?.data ?? null;
         setDoctor(nextDoctor);
         setForm({
@@ -128,6 +128,20 @@ export default function DoctorProfilePage({ params }: { params: { id: string } }
             <div>{doctor.bio || 'No bio provided yet.'}</div>
           </div>
         </div>
+
+        {Array.isArray(doctor.leaves) && doctor.leaves.length ? (
+          <div className="mt-6">
+            <div className="text-sm font-medium text-gray-700">Leave history</div>
+            <div className="mt-2 space-y-2">
+              {doctor.leaves.map((leave: any) => (
+                <div key={leave.id} className="rounded border bg-gray-50 px-3 py-2 text-sm">
+                  <div className="font-medium">{new Date(leave.date).toLocaleDateString()}</div>
+                  <div className="text-gray-600">{leave.reason || 'No reason provided'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <form onSubmit={handleSave} className="rounded-lg border bg-white p-6 shadow-sm">

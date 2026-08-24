@@ -48,7 +48,11 @@ export default function NewDoctorPage() {
       router.refresh();
     } catch (error) {
       console.warn('Failed to create doctor', error);
-      setMessage('Could not create the doctor profile.');
+      const message =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      setMessage(message ?? 'Could not create the doctor profile.');
     } finally {
       setSaving(false);
     }
