@@ -174,22 +174,27 @@ async function callGemini(prompt: string): Promise<string> {
     throw new Error('GEMINI_API_KEY is not configured.');
   }
 
-  const response = await geminiClient.models.generateContent({
-    model: 'gemini-1.5-flash',
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      temperature: 0,
-    },
-  });
+  try {
+    const response = await geminiClient.models.generateContent({
+      model: 'gemini-3.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        temperature: 0,
+      },
+    });
 
-  const content = response.text;
+    const content = response.text;
 
-  if (typeof content !== 'string' || content.trim().length === 0) {
-    throw new Error('Gemini returned an empty response.');
+    if (typeof content !== 'string' || content.trim().length === 0) {
+      throw new Error('Gemini returned an empty response.');
+    }
+
+    return content;
+  } catch (error) {
+    console.warn('[llm] Gemini request failed', error);
+    throw error;
   }
-
-  return content;
 }
 
 export async function analyseSymptoms(symptoms: string): Promise<PreVisitAssessment> {
