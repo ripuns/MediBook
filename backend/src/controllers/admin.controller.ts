@@ -138,6 +138,49 @@ export async function listAdminDoctorsController(_req: Request, res: Response, n
   }
 }
 
+export async function getAdminDoctorController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+
+    const doctor = await prisma.doctorProfile.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        leaveDays: {
+          orderBy: { date: 'desc' },
+        },
+      },
+    });
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: doctor.id,
+        userId: doctor.userId,
+        name: doctor.user.name,
+        email: doctor.user.email,
+        specialisation: doctor.specialisation,
+        slotDurationMin: doctor.slotDurationMin,
+        workingHours: doctor.workingHours,
+        bio: doctor.bio,
+        leaves: doctor.leaveDays,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function createAdminDoctorController(req: Request, res: Response, next: NextFunction) {
   try {
     const { name, email, password, specialisation, slotDurationMin, workingHours, bio } = req.body as {
@@ -262,7 +305,7 @@ export async function createAdminLeaveController(req: Request, res: Response, ne
       return res.status(400).json({ success: false, message: 'Missing leave date.' });
     }
 
-    const leaveDay = await createDoctorLeave({
+    const result = await createDoctorLeave({
       prisma,
       doctorId: id,
       date,
@@ -271,9 +314,7 @@ export async function createAdminLeaveController(req: Request, res: Response, ne
 
     return res.status(201).json({
       success: true,
-      data: {
-        leaveDay,
-      },
+      data: result,
     });
   } catch (error) {
     return next(error);

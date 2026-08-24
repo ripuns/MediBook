@@ -6,6 +6,7 @@ import {
   createAdminLeaveController,
   deleteAdminDoctorController,
   deleteAdminLeaveController,
+  getAdminDoctorController,
   listAdminAppointmentsController,
   listAdminDoctorsController,
   listAdminNotificationsController,
@@ -19,6 +20,7 @@ router.get('/overview', requireAuth, requireRole(['ADMIN']), adminOverviewContro
 router.get('/appointments', requireAuth, requireRole(['ADMIN']), listAdminAppointmentsController);
 router.get('/notifications', requireAuth, requireRole(['ADMIN']), listAdminNotificationsController);
 router.get('/doctors', requireAuth, requireRole(['ADMIN']), listAdminDoctorsController);
+router.get('/doctors/:id', requireAuth, requireRole(['ADMIN']), getAdminDoctorController);
 router.post('/doctors', requireAuth, requireRole(['ADMIN']), createAdminDoctorController);
 router.put('/doctors/:id', requireAuth, requireRole(['ADMIN']), updateAdminDoctorController);
 router.delete('/doctors/:id', requireAuth, requireRole(['ADMIN']), deleteAdminDoctorController);
