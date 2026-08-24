@@ -1,13 +1,26 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import PreVisitSummaryBadge from '@/components/appointments/PreVisitSummaryBadge';
 import api from '@/lib/api';
 
+type AppointmentDetail = {
+  id: string;
+  status: string;
+  slotStart: string;
+  slotEnd: string;
+  symptoms?: string | null;
+  preVisitSummary?: unknown;
+  patient?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+  };
+};
+
 export default function DoctorAppointmentDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
-  const [appointment, setAppointment] = useState<any>(null);
+  const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
   const [notes, setNotes] = useState('');
   const [prescription, setPrescription] = useState('');
   const [loading, setLoading] = useState(true);
@@ -17,9 +30,8 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
   useEffect(() => {
     async function load() {
       try {
-        const response = await api.get('/doctor/appointments');
-        const list = Array.isArray(response.data?.data) ? response.data.data : [];
-        setAppointment(list.find((item: any) => item.id === params.id) ?? null);
+        const response = await api.get(`/doctor/appointments/${params.id}`);
+        setAppointment(response.data?.data ?? null);
       } catch (error) {
         console.warn('Failed to load appointment', error);
         setAppointment(null);
@@ -39,13 +51,12 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
     try {
       await api.post(`/doctor/appointments/${params.id}/complete`, {
         notes,
-        postVisitSummary: appointment?.postVisitSummary ?? null,
+        postVisitSummary: appointment?.preVisitSummary ?? null,
         prescription: prescription
           ? [{ drug: prescription, frequency: 'as directed', durationDays: 7 }]
           : [],
       });
       setMessage('Visit saved and marked complete.');
-      router.refresh();
     } catch (error) {
       console.warn('Failed to save visit notes', error);
       setMessage('Could not save the visit note.');
@@ -79,6 +90,13 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
           <div><span className="font-medium text-gray-800">ID:</span> {params.id}</div>
         </div>
 
+        {appointment.patient ? (
+          <div className="mt-4 rounded bg-gray-50 p-3 text-sm">
+            <span className="font-medium text-gray-800">Patient contact:</span> {appointment.patient.email}
+            {appointment.patient.phone ? ` • ${appointment.patient.phone}` : ''}
+          </div>
+        ) : null}
+
         {appointment.symptoms ? (
           <div className="mt-4 rounded bg-gray-50 p-3 text-sm">
             <span className="font-medium text-gray-800">Symptoms:</span> {appointment.symptoms}
@@ -86,7 +104,7 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
         ) : null}
       </div>
 
-      <PreVisitSummaryBadge summary={appointment.preVisitSummary ?? 'No AI summary available yet.'} />
+      <PreVisitSummaryBadge summary={typeof appointment.preVisitSummary === 'string' ? appointment.preVisitSummary : 'No AI summary available yet.'} />
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-white p-6 shadow-sm">
         <h3 className="text-xl font-semibold">Post-visit documentation</h3>
