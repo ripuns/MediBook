@@ -79,7 +79,6 @@ export default function DoctorAppointmentDetailPage({ params }: { params: Promis
     try {
       await api.post(`/doctor/appointments/${id}/complete`, {
         notes,
-        postVisitSummary: appointment?.preVisitSummary ?? null,
         prescription: prescription
           ? [{ drug: prescription, frequency: 'as directed', durationDays: 7 }]
           : [],

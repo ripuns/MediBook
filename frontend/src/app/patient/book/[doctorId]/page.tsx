@@ -113,11 +113,6 @@ export default function BookDoctorPage({ params }: { params: Promise<{ doctorId:
       const confirmed = await api.put(`/patient/appointments/${heldAppointment.id}/confirm`, {
         appointmentId: heldAppointment.id,
         symptoms: form.symptoms,
-        preVisitSummary: {
-          chiefComplaint: form.symptoms.slice(0, 100),
-          urgencyLevel: 'Medium',
-          suggestedQuestions: [form.notes || 'Any other concerns?'],
-        },
       });
 
       setAppointmentId(confirmed.data?.data?.id ?? heldAppointment.id);
