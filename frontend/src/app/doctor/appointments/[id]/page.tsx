@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PreVisitSummaryBadge from '@/components/appointments/PreVisitSummaryBadge';
 import api from '@/lib/api';
 
@@ -19,7 +19,8 @@ type AppointmentDetail = {
   };
 };
 
-export default function DoctorAppointmentDetailPage({ params }: { params: { id: string } }) {
+export default function DoctorAppointmentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
   const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
   const [notes, setNotes] = useState('');
   const [prescription, setPrescription] = useState('');
@@ -30,7 +31,7 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
   useEffect(() => {
     async function load() {
       try {
-        const response = await api.get(`/doctor/appointments/${params.id}`);
+        const response = await api.get(`/doctor/appointments/${id}`);
         setAppointment(response.data?.data ?? null);
       } catch (error) {
         console.warn('Failed to load appointment', error);
@@ -41,7 +42,7 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
     }
 
     load();
-  }, [params.id]);
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +50,7 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
     setMessage(null);
 
     try {
-      await api.post(`/doctor/appointments/${params.id}/complete`, {
+      await api.post(`/doctor/appointments/${id}/complete`, {
         notes,
         postVisitSummary: appointment?.preVisitSummary ?? null,
         prescription: prescription
@@ -87,7 +88,7 @@ export default function DoctorAppointmentDetailPage({ params }: { params: { id: 
         <div className="mt-4 grid gap-3 text-sm text-gray-600 md:grid-cols-3">
           <div><span className="font-medium text-gray-800">Date:</span> {new Date(appointment.slotStart).toLocaleDateString()}</div>
           <div><span className="font-medium text-gray-800">Time:</span> {new Date(appointment.slotStart).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
-          <div><span className="font-medium text-gray-800">ID:</span> {params.id}</div>
+          <div><span className="font-medium text-gray-800">ID:</span> {id}</div>
         </div>
 
         {appointment.patient ? (

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '@/lib/api';
 
 const emptyForm = {
@@ -10,7 +10,8 @@ const emptyForm = {
   bio: '',
 };
 
-export default function DoctorProfilePage({ params }: { params: { id: string } }) {
+export default function DoctorProfilePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = React.use(params);
   const [doctor, setDoctor] = useState<any>(null);
   const [form, setForm] = useState(emptyForm);
   const [leaveDate, setLeaveDate] = useState('');
@@ -22,7 +23,7 @@ export default function DoctorProfilePage({ params }: { params: { id: string } }
   useEffect(() => {
     async function load() {
       try {
-        const response = await api.get(`/admin/doctors/${params.id}`);
+        const response = await api.get(`/admin/doctors/${id}`);
         const nextDoctor = response.data?.data ?? null;
         setDoctor(nextDoctor);
         setForm({
@@ -39,7 +40,7 @@ export default function DoctorProfilePage({ params }: { params: { id: string } }
     }
 
     load();
-  }, [params.id]);
+  }, [id]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +48,7 @@ export default function DoctorProfilePage({ params }: { params: { id: string } }
     setMessage(null);
 
     try {
-      const response = await api.put(`/admin/doctors/${params.id}`, {
+      const response = await api.put(`/admin/doctors/${id}`, {
         specialisation: form.specialisation,
         slotDurationMin: form.slotDurationMin,
         bio: form.bio || null,
@@ -69,7 +70,7 @@ export default function DoctorProfilePage({ params }: { params: { id: string } }
     setMessage(null);
 
     try {
-      await api.post(`/admin/doctors/${params.id}/leave`, {
+      await api.post(`/admin/doctors/${id}/leave`, {
         date: leaveDate,
         reason: leaveReason || null,
       });
@@ -89,7 +90,7 @@ export default function DoctorProfilePage({ params }: { params: { id: string } }
     setMessage(null);
 
     try {
-      await api.delete(`/admin/doctors/${params.id}`);
+      await api.delete(`/admin/doctors/${id}`);
       setMessage('Doctor deleted.');
     } catch (error) {
       console.warn('Failed to delete doctor', error);
