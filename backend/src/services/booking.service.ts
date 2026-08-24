@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 export type SlotConflict = {
   slotStart: string | Date;
@@ -111,7 +111,7 @@ export async function holdSlot({
 
   // We do the conflict check and slot reservation update inside a single transaction so two
   // near-simultaneous requests cannot both pass the same availability check before either one writes.
-  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  return prisma.$transaction(async (tx: any) => {
     const now = new Date();
     const existing = await tx.appointment.findUnique({
       where: {
@@ -143,7 +143,7 @@ export async function holdSlot({
           status: 'HELD',
           holdExpiresAt: new Date(Date.now() + 5 * 60 * 1000),
           symptoms: null,
-          preVisitSummary: Prisma.JsonNull,
+          preVisitSummary: null,
         },
       });
     }
@@ -172,7 +172,7 @@ export async function confirmSlot({
   appointmentId: string;
   patientId: string;
   symptoms?: string | null;
-  preVisitSummary?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
+  preVisitSummary?: unknown;
 }) {
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
@@ -193,14 +193,14 @@ export async function confirmSlot({
   // We clear the temporary hold once the patient confirms so the slot becomes a formal booking
   // instead of a five-minute reservation that can still be treated as pending.
   const nextPreVisitSummary =
-    preVisitSummary !== undefined ? preVisitSummary : appointment.preVisitSummary ?? Prisma.JsonNull;
+    preVisitSummary !== undefined ? preVisitSummary : appointment.preVisitSummary ?? null;
 
   return prisma.appointment.update({
     where: { id: appointmentId },
     data: {
       status: 'CONFIRMED',
       symptoms: symptoms ?? appointment.symptoms,
-      preVisitSummary: nextPreVisitSummary,
+      ...(nextPreVisitSummary !== null ? { preVisitSummary: nextPreVisitSummary as any } : {}),
       holdExpiresAt: null,
     },
   });

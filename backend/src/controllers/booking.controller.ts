@@ -1,5 +1,4 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { Prisma } from '@prisma/client';
 
 import { prisma } from '../lib/prisma';
 import {
@@ -91,7 +90,7 @@ export async function confirmSlotController(req: Request, res: Response, next: N
     }
 
     const appointmentId = (req.body?.appointmentId ?? req.params?.appointmentId) as string | undefined;
-    const { symptoms, preVisitSummary } = req.body as { symptoms?: string; preVisitSummary?: Prisma.InputJsonValue };
+    const { symptoms, preVisitSummary } = req.body as { symptoms?: string; preVisitSummary?: unknown };
 
     if (!appointmentId) {
       return res.status(400).json({ success: false, message: 'Missing appointmentId.' });

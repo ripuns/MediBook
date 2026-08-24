@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-
 import { prisma } from '../lib/prisma';
 import { sendEmail } from './email.service';
 
@@ -46,7 +44,7 @@ export async function queueNotification({ appointmentId, type, channel, payload 
       channel,
       status: 'PENDING',
       attempts: 0,
-      payload: normalisedPayload as Prisma.InputJsonValue,
+      payload: normalisedPayload as any,
     },
   });
 }
