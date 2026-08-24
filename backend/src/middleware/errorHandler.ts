@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 
@@ -10,13 +11,14 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ) {
+  const err = error as { statusCode?: number } | Error | unknown;
   let statusCode = 500;
 
-  if (error && typeof error === 'object' && 'statusCode' in error && typeof error.statusCode === 'number') {
-    statusCode = error.statusCode;
+  if (err && typeof err === 'object' && 'statusCode' in err && typeof err.statusCode === 'number') {
+    statusCode = err.statusCode;
   } else if (error instanceof ZodError) {
     statusCode = 400;
-  } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  } else if (error instanceof PrismaClientKnownRequestError) {
     if (error.code === 'P2002') {
       statusCode = 409;
     } else if (error.code === 'P2025') {

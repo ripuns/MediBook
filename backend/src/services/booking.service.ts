@@ -111,7 +111,7 @@ export async function holdSlot({
 
   // We do the conflict check and slot reservation update inside a single transaction so two
   // near-simultaneous requests cannot both pass the same availability check before either one writes.
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const now = new Date();
     const existing = await tx.appointment.findUnique({
       where: {
@@ -172,7 +172,7 @@ export async function confirmSlot({
   appointmentId: string;
   patientId: string;
   symptoms?: string | null;
-  preVisitSummary?: Prisma.InputJsonValue;
+  preVisitSummary?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
 }) {
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },

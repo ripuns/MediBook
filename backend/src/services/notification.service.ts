@@ -1,4 +1,4 @@
-import { Prisma, type NotificationLog } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { prisma } from '../lib/prisma';
 import { sendEmail } from './email.service';
@@ -36,7 +36,7 @@ async function sendEmailNotification(payload: NotificationPayload) {
   });
 }
 
-export async function queueNotification({ appointmentId, type, channel, payload }: QueueNotificationInput): Promise<NotificationLog> {
+export async function queueNotification({ appointmentId, type, channel, payload }: QueueNotificationInput) {
   const normalisedPayload = { ...(payload ?? {}) } as NotificationPayload;
 
   return prisma.notificationLog.create({
@@ -51,7 +51,7 @@ export async function queueNotification({ appointmentId, type, channel, payload 
   });
 }
 
-export async function processNotification(notificationId: string): Promise<NotificationLog> {
+export async function processNotification(notificationId: string) {
   const notification = await prisma.notificationLog.findUnique({
     where: { id: notificationId },
   });
