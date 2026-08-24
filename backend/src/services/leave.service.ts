@@ -115,7 +115,10 @@ export async function createDoctorLeave({
     }
   }
 
-  return createdLeave;
+  return {
+    leaveDay: createdLeave,
+    affectedCount: appointments.length,
+  };
 }
 
 export async function listDoctorLeaves({
