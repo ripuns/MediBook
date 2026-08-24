@@ -3,6 +3,7 @@ import { google } from 'googleapis';
 
 import { env } from '../config/env';
 import { getTokens, storeTokens } from '../lib/calendar';
+import { prisma } from '../lib/prisma';
 
 export async function calendarConnectController(req: Request, res: Response, next: NextFunction) {
   try {
@@ -77,7 +78,19 @@ export async function calendarCallbackController(req: Request, res: Response, ne
         : {}),
     });
 
-    const redirectUrl = `${env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}/calendar-connected`;
+    const user = await prisma.user.findUnique({
+      where: { id: state },
+      select: { role: true },
+    });
+
+    const dashboardPath =
+      user?.role === 'DOCTOR'
+        ? '/doctor/dashboard'
+        : user?.role === 'ADMIN'
+          ? '/admin/dashboard'
+          : '/patient/dashboard';
+
+    const redirectUrl = `${env.FRONTEND_URL.replace(/\/$/, '')}${dashboardPath}?calendar=connected`;
     return res.redirect(redirectUrl);
   } catch (error) {
     return next(error);

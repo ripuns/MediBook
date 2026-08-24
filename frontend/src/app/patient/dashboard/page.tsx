@@ -38,6 +38,15 @@ export default function PatientDashboardPage() {
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarNotice, setCalendarNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('calendar') === 'connected') {
+      setCalendarNotice('Google Calendar connected successfully.');
+    }
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -76,7 +85,7 @@ export default function PatientDashboardPage() {
       const response = await api.get('/calendar/connect');
       const url = response.data?.data?.url;
       if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
+        window.location.href = url;
       }
     } catch (error) {
       console.warn('Calendar connect failed', error);
@@ -109,6 +118,12 @@ export default function PatientDashboardPage() {
           </button>
         </div>
       </div>
+
+      {calendarNotice ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          {calendarNotice}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border bg-white p-4 shadow-sm">
