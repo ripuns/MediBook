@@ -18,7 +18,14 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push('/');
+      const role = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
+      if (role === 'DOCTOR') {
+        router.push('/doctor/dashboard');
+      } else if (role === 'ADMIN') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/patient/dashboard');
+      }
     } catch (err: any) {
       setError(err?.message ?? 'Login failed');
     } finally {

@@ -20,7 +20,13 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register({ name, email, password, role });
-      router.push('/');
+      if (role === 'DOCTOR') {
+        router.push('/doctor/dashboard');
+      } else if (role === 'ADMIN') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/patient/dashboard');
+      }
     } catch (err: any) {
       setError(err?.message ?? 'Registration failed');
     } finally {
