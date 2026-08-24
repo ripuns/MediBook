@@ -142,6 +142,74 @@ export async function doctorAppointmentsController(req: Request, res: Response, 
   }
 }
 
+export async function doctorAppointmentByIdController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.sub;
+    const { appointmentId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required.',
+      });
+    }
+
+    const doctorProfile = await prisma.doctorProfile.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!doctorProfile) {
+      return res.status(404).json({
+        success: false,
+        message: 'Doctor profile not found.',
+      });
+    }
+
+    const appointment = await prisma.appointment.findFirst({
+      where: {
+        id: appointmentId,
+        doctorId: doctorProfile.id,
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+        doctor: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found.',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: appointment,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function completeAppointmentWithIntegrations({
   appointmentId,
   doctorUserId,

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import {
+  doctorAppointmentByIdController,
   doctorAppointmentsController,
   doctorByIdController,
   doctorCompleteAppointmentController,
@@ -16,6 +17,7 @@ router.get('/directory', requireAuth, requireRole(['PATIENT', 'DOCTOR', 'ADMIN']
 router.get('/profile', requireAuth, requireRole(['DOCTOR']), doctorProfileController);
 router.put('/profile', requireAuth, requireRole(['DOCTOR']), updateDoctorProfileController);
 router.get('/appointments', requireAuth, requireRole(['DOCTOR']), doctorAppointmentsController);
+router.get('/appointments/:appointmentId', requireAuth, requireRole(['DOCTOR']), doctorAppointmentByIdController);
 router.post('/appointments/:appointmentId/complete', requireAuth, requireRole(['DOCTOR']), doctorCompleteAppointmentController);
 router.get('/:doctorId', requireAuth, requireRole(['PATIENT', 'DOCTOR', 'ADMIN']), doctorByIdController);
 
