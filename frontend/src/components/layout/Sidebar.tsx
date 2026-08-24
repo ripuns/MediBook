@@ -31,6 +31,9 @@ export default function Sidebar() {
         <NavItem href="/patient/doctors" label="Doctors" />
         <NavItem href="/patient/appointments" label="Appointments" />
         <NavItem href="/patient/book/dr-101" label="Book visit" />
+        <NavItem href="/admin/dashboard" label="Admin" />
+        <NavItem href="/admin/appointments" label="Admin Appointments" />
+        <NavItem href="/admin/notifications" label="Admin Notifications" />
       </nav>
 
       <div className="mt-6 border-t pt-4">
