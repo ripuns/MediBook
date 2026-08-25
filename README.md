@@ -4,8 +4,8 @@ MediBook is a healthcare appointment and follow-up manager with three portals: P
 
 ## Tech Stack
 
-- Backend: Node.js 20, Express, TypeScript, Prisma, PostgreSQL, JWT, bcrypt, Zod, Nodemailer, Google Calendar API, node-cron
-- Frontend: Next.js, TypeScript, Tailwind CSS, Axios, React Context, shadcn/ui, lucide-react
+- **Backend**: Node.js 20, Express, TypeScript, Prisma, PostgreSQL, JWT, bcrypt, Zod, Nodemailer, Google Calendar API, node-cron
+- **Frontend**: Next.js 16 (App Router), TypeScript, Tailwind CSS, Axios, React Context, Base UI React, lucide-react
 
 ## Project Structure
 
@@ -59,11 +59,12 @@ PORT=5000
 NODE_ENV=development
 GMAIL_USER=
 GMAIL_APP_PASSWORD=
-OPENAI_API_KEY=
+GEMINI_API_KEY=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=
-NEXT_PUBLIC_API_URL=
+FRONTEND_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
 Frontend uses:
@@ -74,46 +75,59 @@ NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
 ## API Overview
 
-Auth:
+### Auth (`/api/auth`)
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/refresh`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
+- `POST /api/auth/register` — Register a new account
+- `POST /api/auth/login` — Login and fetch JWT access/refresh tokens
+- `POST /api/auth/refresh` — Refresh access token using refresh token
+- `POST /api/auth/logout` — Invalidate user session
+- `GET /api/auth/me` — Retrieve the current authenticated user identity
 
-Admin:
+### Admin (`/api/admin`)
 
-- `GET /api/admin/overview`
-- `GET /api/admin/doctors`
-- `POST /api/admin/doctors`
-- `PUT /api/admin/doctors/:id`
-- `DELETE /api/admin/doctors/:id`
-- `POST /api/admin/doctors/:id/leave`
-- `DELETE /api/admin/doctors/:id/leave/:leaveId`
+- `GET /api/admin/overview` — Get system health overview stats (patientCount, doctorCount, appointmentCount, pendingHoldCount)
+- `GET /api/admin/appointments` — List all appointment logs in the system
+- `GET /api/admin/notifications` — List system notification logs
+- `GET /api/admin/doctors` — List registered clinicians
+- `GET /api/admin/doctors/:id` — Retrieve a single doctor profile and leave list
+- `POST /api/admin/doctors` — Create a new doctor user and profile
+- `PUT /api/admin/doctors/:id` — Update doctor profile details
+- `DELETE /api/admin/doctors/:id` — Delete a doctor profile (keeps the User entity)
+- `POST /api/admin/doctors/:id/leave` — Record a leave day for a doctor
+- `DELETE /api/admin/doctors/:id/leave/:leaveId` — Delete a leave day
 
-Patient:
+### Patient (`/api/patient`)
 
-- `GET /api/patient/appointments`
-- `GET /api/doctor/directory`
-- `GET /api/doctor/:doctorId`
-- `GET /api/booking/doctor/:doctorId/slots?date=YYYY-MM-DD`
-- `POST /api/booking/hold`
-- `POST /api/booking/confirm`
-- `POST /api/booking/cancel`
+- `GET /api/patient/appointments` — Fetch patient's upcoming and historical appointments
+- `GET /api/patient/doctors` — Search and list doctors
+- `GET /api/patient/doctors/:doctorId` — View detailed profile of a doctor
+- `GET /api/patient/doctors/:doctorId/slots` — List available time slots for a doctor on a specific date
+- `POST /api/patient/appointments/hold` — Place a temporary reservation hold on an appointment slot
+- `PUT /api/patient/appointments/:appointmentId/confirm` — Confirm held appointment, providing symptom intake details and generating AI pre-visit summary
+- `PUT /api/patient/appointments/:appointmentId/cancel` — Cancel a confirmed or held appointment
 
-Doctor:
+### Doctor (`/api/doctor`)
 
-- `GET /api/doctor/appointments`
-- `GET /api/doctor/profile`
-- `PUT /api/doctor/profile`
-- `POST /api/doctor/appointments/:appointmentId/complete`
+- `GET /api/doctor/directory` — List doctors (accessible by PATIENT, DOCTOR, ADMIN)
+- `GET /api/doctor/profile` — Fetch currently logged-in doctor's profile
+- `PUT /api/doctor/profile` — Update logged-in doctor's profile details
+- `GET /api/doctor/appointments` — Retrieve appointments list scheduled with this doctor
+- `GET /api/doctor/appointments/:appointmentId` — Retrieve details of a specific appointment
+- `POST /api/doctor/appointments/:appointmentId/complete` — Complete an appointment, recording clinical findings and generating plain-language AI summary
+- `GET /api/doctor/:doctorId` — Get a doctor profile by ID (accessible by PATIENT, DOCTOR, ADMIN)
 
-Calendar:
+### Booking (`/api/booking` - Alternate generic routes)
 
-- `GET /api/calendar/connect`
-- `GET /api/calendar/callback`
-- `GET /api/calendar/status`
+- `GET /api/booking/doctor/:doctorId/slots` — Check slots
+- `POST /api/booking/hold` — Place slot hold
+- `POST /api/booking/confirm` — Confirm hold
+- `POST /api/booking/cancel` — Cancel hold or appointment
+
+### Calendar (`/api/calendar`)
+
+- `GET /api/calendar/connect` — Start the Google OAuth connection flow
+- `GET /api/calendar/callback` — OAuth callback endpoint
+- `GET /api/calendar/status` — Retrieve user's Google Calendar sync status
 
 ## Database Shape
 
@@ -125,19 +139,19 @@ Appointment -> MedicationReminder, NotificationLog
 
 ## LLM Prompts
 
-The backend uses two structured prompts:
+The backend uses Gemini-based structured prompts:
 
-- pre-visit symptom analysis for urgency, chief complaint, and suggested questions
-- post-visit note summarization for plain-language follow-up guidance
+- **Pre-visit symptom analysis** for identifying chief complaints, urgency levels, and generating suggested pre-consultation questions.
+- **Post-visit note summarization** for translating technical clinical notes into plain-language follow-up guidance and extracting scheduled medication reminders.
 
-Both calls are wrapped in fallback handling so booking and completion still work when the model is unavailable.
+Both integrations are wrapped in fallback handling, returning standard mock-up or default details if the Gemini API is offline or missing credentials.
 
 ## Google Calendar Setup
 
-1. Create OAuth credentials in Google Cloud.
-2. Add the backend callback URL to the authorized redirect URIs.
+1. Create OAuth credentials in Google Cloud Console.
+2. Add the backend callback URL (`/api/calendar/callback`) to the authorized redirect URIs.
 3. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI`.
-4. Connect from the patient or doctor dashboard.
+4. Connect Google Calendar from the patient or doctor dashboard page.
 
 ## Tests
 
@@ -149,5 +163,5 @@ cd backend && npm test
 
 ## Deployment
 
-- Backend: deploy to Render, run Prisma generate/migrate during build, and start `dist/server.js`.
-- Frontend: deploy to Vercel with `frontend/` as the root directory and `NEXT_PUBLIC_API_URL` pointing at the Render API.
+- **Backend**: Deploy to Render, run Prisma generate/migrate during build, and start `dist/server.js`.
+- **Frontend**: Deploy to Vercel with `frontend/` as the root directory and `NEXT_PUBLIC_API_URL` pointing at the Render API.
