@@ -46,7 +46,7 @@ export default function PatientAppointmentsPage() {
         const list = Array.isArray(resp.data?.data) ? resp.data.data : [];
         setAppointments(list.map((appointment: any) => ({
           id: appointment.id,
-          doctorName: appointment.doctor?.user?.name ? `Dr. ${appointment.doctor.user.name}` : 'Clinic Doctor',
+          doctorName: appointment.doctor?.user?.name ? `${appointment.doctor.user.name}` : 'Clinic Doctor',
           specialty: appointment.doctor?.specialisation ?? 'Specialist',
           date: getDisplayDate(appointment.slotStart),
           time: getDisplayTime(appointment.slotStart),
