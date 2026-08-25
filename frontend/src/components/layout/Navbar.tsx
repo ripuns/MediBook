@@ -1,12 +1,30 @@
 "use client";
 
-import React from 'react';
+import React, {useState} from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogOut, User, Activity } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const onClick = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      setLoading(true);
+      try {
+        await logout();
+        router.push('/auth/login');
+      } catch (err: any) {
+        console.warn('Registration failure details:', err);
+        setError(err?.response?.data?.message ?? err?.message ?? 'Registration failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
   
   const getRoleLabelAndBadge = (role?: string | null) => {
     switch (role) {
@@ -52,7 +70,7 @@ export default function Navbar() {
             </div>
 
             <button
-              onClick={() => void logout()}
+              onClick={onClick}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-200"
             >
               <LogOut className="w-3.5 h-3.5" />

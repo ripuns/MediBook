@@ -1,17 +1,17 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Users, 
-  Bell, 
-  Stethoscope, 
-  LogOut, 
-  Activity 
+import {
+  LayoutDashboard,
+  Calendar,
+  Users,
+  Bell,
+  Stethoscope,
+  LogOut,
+  Activity
 } from 'lucide-react';
 
 type NavItemProps = {
@@ -23,15 +23,14 @@ type NavItemProps = {
 const NavItem: React.FC<NavItemProps> = ({ href, label, icon }) => {
   const path = usePathname();
   const active = path === href || path?.startsWith(href + '/');
-  
+
   return (
-    <Link 
-      href={href} 
-      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-        active 
-          ? 'bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-50/50' 
+    <Link
+      href={href}
+      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${active
+          ? 'bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-50/50'
           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-      }`}
+        }`}
     >
       <div className={`transition-transform duration-200 ${active ? 'scale-110 text-indigo-600' : 'text-slate-400'}`}>
         {icon}
@@ -43,7 +42,25 @@ const NavItem: React.FC<NavItemProps> = ({ href, label, icon }) => {
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const role = user?.role;
+
+  const onClick = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await logout();
+      router.push('/auth/login')
+    } catch (err: any) {
+      console.warn('Login failure details:', err);
+      setError(err?.response?.data?.message ?? err?.message ?? 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 h-screen flex flex-col sticky top-0 z-40">
@@ -95,15 +112,15 @@ export default function Sidebar() {
 
           {user ? (
             <button
-              onClick={() => void logout()}
+              onClick={onClick}
               className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100/80 transition-all duration-200 border border-red-100"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Logout</span>
             </button>
           ) : (
-            <Link 
-              href="/auth/login" 
+            <Link
+              href="/auth/login"
               className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100/85 transition-all duration-200 border border-indigo-100"
             >
               <Activity className="w-3.5 h-3.5" />
