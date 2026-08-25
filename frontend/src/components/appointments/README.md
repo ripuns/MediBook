@@ -1,7 +1,6 @@
 # Appointments Components
 
-This folder contains the patient appointment list UI.
+This folder contains appointment components used across the patient and doctor portals:
 
-- `AppointmentCard.tsx` — displays a single appointment and offers a cancel action when the appointment is still active.
-
-This component is intentionally lightweight and can be wired to real appointment APIs once the patient booking endpoints are connected.
+- `AppointmentCard.tsx` — displays patient's consultation records, dates, clocks, location maps, status details, and offers appointment cancellation triggers.
+- `PreVisitSummaryBadge.tsx` — styled card presenting AI-generated pre-visit assessments.

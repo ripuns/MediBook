@@ -1,8 +1,6 @@
 # Booking Components
 
-This folder contains booking workflow UI primitives used throughout the patient portal.
+This folder contains scheduling UI primitives used during patient reservation workflows:
 
-- `SlotPicker.tsx` — choose an appointment date/time from a set of options.
-- `SymptomForm.tsx` — collects patient symptom details and submits the booking request.
-
-These components are meant to be connected to backend appointment APIs once the patient appointment endpoints are available.
+- `SlotPicker.tsx` — checks real-time doctor availability and renders slots inside responsive grids.
+- `SymptomForm.tsx` — gathers patient symptom descriptions and notes before finalizing appointments.
