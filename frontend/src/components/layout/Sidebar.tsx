@@ -28,8 +28,8 @@ const NavItem: React.FC<NavItemProps> = ({ href, label, icon }) => {
     <Link
       href={href}
       className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${active
-          ? 'bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-50/50'
-          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+        ? 'bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-50/50'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
         }`}
     >
       <div className={`transition-transform duration-200 ${active ? 'scale-110 text-indigo-600' : 'text-slate-400'}`}>
@@ -66,13 +66,13 @@ export default function Sidebar() {
     <aside className="w-64 bg-white border-r border-slate-200 h-screen flex flex-col sticky top-0 z-40">
       {/* Brand header */}
       <div className="p-6 border-b border-slate-200 flex items-center gap-3 bg-gradient-to-r from-slate-50 to-white">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200">
-          <Stethoscope className="w-5 h-5" />
-        </div>
-        <div>
-          <h3 className="text-lg font-bold text-slate-800 tracking-tight leading-tight">MediBook</h3>
-          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Portal</span>
-        </div>
+          <Link href='/' className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200">
+            <Stethoscope className="w-5 h-5" />
+          </Link>
+          <Link href='/'>
+            <h3 className="text-lg font-bold text-slate-800 tracking-tight leading-tight">MediBook</h3>
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Portal</span>
+          </Link>
       </div>
 
       {/* Navigation section */}
